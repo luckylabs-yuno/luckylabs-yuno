@@ -136,16 +136,27 @@
   document.body.appendChild(chatbox);
 
   // --- Behavior ---
+let hasOpenedChat = false;
+
   teaser.onclick = () => {
     teaser.style.display = "none";
     chatbox.style.display = "flex";
-    addMessage("Hey! Need help with shipping or anything?", "bot");
-    chatHistory.push({ role: "assistant", content: "Hey! Need help with shipping or anything?" });
+    if (!hasOpenedChat) {
+      addMessage("Hey! Need help with shipping or anything?", "bot");
+      chatHistory.push({ role: "assistant", content: "Hey! Need help with shipping or anything?" });
+      hasOpenedChat = true;
+    }
   };
 
   bubble.onclick = () => {
-    chatbox.style.display = chatbox.style.display === "none" ? "flex" : "none";
+    const isOpen = chatbox.style.display === "flex";
+    chatbox.style.display = isOpen ? "none" : "flex";
     teaser.style.display = "none";
+    if (!hasOpenedChat && !isOpen) {
+      addMessage("Hey! Need help with shipping or anything?", "bot");
+      chatHistory.push({ role: "assistant", content: "Hey! Need help with shipping or anything?" });
+      hasOpenedChat = true;
+    }
   };
 
   setTimeout(() => {
