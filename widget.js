@@ -129,7 +129,7 @@
       const res = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: text, site_id: "demo" }) // 🔁 Set site_id appropriately
+        body: JSON.stringify({ query: text, site_id: "bombayshaving" }) // 🔁 Set site_id appropriately
       });
 
       const data = await res.json();
