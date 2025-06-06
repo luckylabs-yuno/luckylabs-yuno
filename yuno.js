@@ -1,6 +1,8 @@
 (() => {
   const API_URL = "https://luckylabs.pythonanywhere.com/ask";
-  const siteId = "bombayshaving";
+  // Detect the current script tag and read the `site_id` attribute
+  const currentScript = document.currentScript || [...document.getElementsByTagName('script')].pop();
+  const siteId = currentScript.getAttribute("site_id") || "default_site";
 
   let chatHistory = [
     { role: "system", content: "You are Yuno, a friendly shopping assistant helping users on this website." }
