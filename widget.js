@@ -1,6 +1,11 @@
+<script>
 (() => {
   const API_URL = "https://luckylabs.pythonanywhere.com/ask";
-  const SITE_ID = "bombayshaving";
+  const siteId = "bombayshaving";
+
+  let chatHistory = [
+    { role: "system", content: "You are Yuno, a friendly shopping assistant helping users on this website." }
+  ];
 
   // --- Styles ---
   const style = document.createElement("style");
@@ -28,25 +33,14 @@
       bottom: 90px;
       right: 90px;
       background: white;
-      color: #333;
-      padding: 10px 14px;
-      border-radius: 20px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      padding: 8px 14px;
+      border-radius: 18px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.15);
       font-size: 14px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      max-width: 250px;
+      color: #111;
       cursor: pointer;
       z-index: 9999;
-    }
-    #yuno-close-teaser {
-      background: transparent;
-      border: none;
-      font-size: 16px;
-      cursor: pointer;
-      color: #999;
-      margin-left: auto;
+      transition: opacity 0.5s;
     }
 
     #yuno-chatbox {
@@ -108,35 +102,29 @@
       color: #111827;
     }
 
-    .yuno-typing {
-      font-style: italic;
-      opacity: 0.6;
+    .yuno-msg.typing::after {
+      content: "⌛";
+      animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
     }
   `;
   document.head.appendChild(style);
 
-  // Teaser Bubble
-  const teaser = document.createElement("div");
-  teaser.id = "yuno-teaser";
-  teaser.innerHTML = `
-    <span>👋 Hey! Need help with shipping or anything?</span>
-    <button id="yuno-close-teaser">×</button>
-  `;
-  document.body.appendChild(teaser);
-
-  const teaserClose = document.getElementById("yuno-close-teaser");
-  teaserClose.onclick = (e) => {
-    e.stopPropagation();
-    teaser.style.display = "none";
-  };
-
-  // Chat Bubble
+  // --- Elements ---
   const bubble = document.createElement("div");
   bubble.id = "yuno-bubble";
   bubble.textContent = "💬";
   document.body.appendChild(bubble);
 
-  // Chatbox
+  const teaser = document.createElement("div");
+  teaser.id = "yuno-teaser";
+  teaser.textContent = "👋 Need help with shipping or anything?";
+  document.body.appendChild(teaser);
+
   const chatbox = document.createElement("div");
   chatbox.id = "yuno-chatbox";
   chatbox.innerHTML = `
@@ -148,14 +136,22 @@
   `;
   document.body.appendChild(chatbox);
 
-  // Toggle chat visibility
-  const openChat = () => {
-    chatbox.style.display = "flex";
+  // --- Behavior ---
+  teaser.onclick = () => {
     teaser.style.display = "none";
-    addMessage("👋 Hey! Need help with shipping or anything?", "bot");
+    chatbox.style.display = "flex";
+    addMessage("Hey! Need help with shipping or anything?", "bot");
+    chatHistory.push({ role: "assistant", content: "Hey! Need help with shipping or anything?" });
   };
-  bubble.onclick = openChat;
-  teaser.onclick = openChat;
+
+  bubble.onclick = () => {
+    chatbox.style.display = chatbox.style.display === "none" ? "flex" : "none";
+    teaser.style.display = "none";
+  };
+
+  setTimeout(() => {
+    teaser.style.opacity = 0;
+  }, 15000);
 
   const input = chatbox.querySelector("input");
   const button = chatbox.querySelector("button");
@@ -169,16 +165,16 @@
     messages.scrollTop = messages.scrollHeight;
   };
 
-  const showTyping = () => {
-    const typing = document.createElement("div");
-    typing.className = "yuno-msg bot yuno-typing";
-    typing.id = "yuno-typing";
-    typing.textContent = "Yuno is typing...";
-    messages.appendChild(typing);
+  const addTypingIndicator = () => {
+    const div = document.createElement("div");
+    div.className = "yuno-msg bot typing";
+    div.id = "yuno-typing";
+    div.textContent = "Yuno is typing...";
+    messages.appendChild(div);
     messages.scrollTop = messages.scrollHeight;
   };
 
-  const hideTyping = () => {
+  const removeTypingIndicator = () => {
     const typing = document.getElementById("yuno-typing");
     if (typing) typing.remove();
   };
@@ -187,26 +183,28 @@
     const text = input.value.trim();
     if (!text) return;
     addMessage(text, "user");
+    chatHistory.push({ role: "user", content: text });
     input.value = "";
-    showTyping();
+
+    addTypingIndicator();
 
     try {
       const res = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: text, site_id: SITE_ID })
+        body: JSON.stringify({ messages: chatHistory, site_id: siteId })
       });
 
       const data = await res.json();
-      hideTyping();
-      addMessage(
-        data.content
-          ? `Based on what I found: ${data.content}`
-          : "No response.",
-        "bot"
-      );
+      removeTypingIndicator();
+      if (data.content) {
+        addMessage(data.content, "bot");
+        chatHistory.push({ role: "assistant", content: data.content });
+      } else {
+        addMessage("Hmm, I couldn't find anything useful.", "bot");
+      }
     } catch (e) {
-      hideTyping();
+      removeTypingIndicator();
       addMessage("Oops! Something went wrong.", "bot");
     }
   };
@@ -215,11 +213,5 @@
   input.addEventListener("keydown", (e) => {
     if (e.key === "Enter") sendMessage();
   });
-
-  // Optional: Auto-show teaser after a short delay
-  setTimeout(() => {
-    if (!sessionStorage.getItem("yuno_teaser_closed")) {
-      teaser.style.display = "flex";
-    }
-  }, 2000);
 })();
+</script>
