@@ -1,8 +1,26 @@
 (() => {
   const API_URL = "https://luckylabs.pythonanywhere.com/ask";
-  // Detect the current script tag and read the `site_id` attribute
+
+  // --- Site ID from script tag ---
   const currentScript = document.currentScript || [...document.getElementsByTagName('script')].pop();
   const siteId = currentScript.getAttribute("site_id") || "default_site";
+
+  // --- Session ID (30 min inactivity rule) ---
+  let sessionId = localStorage.getItem("yuno_session_id");
+  let lastActive = parseInt(localStorage.getItem("yuno_last_active") || "0");
+  const now = Date.now();
+  if (!sessionId || now - lastActive > 30 * 60 * 1000) {
+    sessionId = crypto.randomUUID();
+    localStorage.setItem("yuno_session_id", sessionId);
+  }
+  localStorage.setItem("yuno_last_active", now);
+
+  // --- Persistent User ID (no permissions needed) ---
+  let userId = localStorage.getItem("yuno_user_id");
+  if (!userId) {
+    userId = crypto.randomUUID();
+    localStorage.setItem("yuno_user_id", userId);
+  }
 
   let chatHistory = [
     { role: "system", content: "You are Yuno, a friendly shopping assistant helping users on this website." }
@@ -28,7 +46,6 @@
       color: white;
       font-size: 30px;
     }
-
     #yuno-teaser {
       position: fixed;
       bottom: 90px;
@@ -43,7 +60,6 @@
       z-index: 9999;
       transition: opacity 0.5s;
     }
-
     #yuno-chatbox {
       position: fixed;
       bottom: 90px;
@@ -60,19 +76,16 @@
       z-index: 9999;
       font-family: sans-serif;
     }
-
     #yuno-messages {
       padding: 10px;
       flex: 1;
       overflow-y: auto;
       font-size: 14px;
     }
-
     #yuno-input {
       display: flex;
       border-top: 1px solid #eee;
     }
-
     #yuno-input input {
       flex: 1;
       padding: 10px;
@@ -80,7 +93,6 @@
       outline: none;
       font-size: 14px;
     }
-
     #yuno-input button {
       background: #4f46e5;
       color: white;
@@ -88,26 +100,21 @@
       padding: 10px 15px;
       cursor: pointer;
     }
-
     .yuno-msg {
       margin-bottom: 10px;
     }
-
     .yuno-msg.user {
       text-align: right;
       color: #4f46e5;
     }
-
     .yuno-msg.bot {
       text-align: left;
       color: #111827;
     }
-
     .yuno-msg.typing::after {
       content: "⌛";
       animation: blink 1s infinite;
     }
-
     @keyframes blink {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.4; }
@@ -115,7 +122,7 @@
   `;
   document.head.appendChild(style);
 
-  // --- Elements ---
+  // --- UI Elements ---
   const bubble = document.createElement("div");
   bubble.id = "yuno-bubble";
   bubble.textContent = "💬";
@@ -137,8 +144,7 @@
   `;
   document.body.appendChild(chatbox);
 
-  // --- Behavior ---
-let hasOpenedChat = false;
+  let hasOpenedChat = false;
 
   teaser.onclick = () => {
     teaser.style.display = "none";
@@ -204,7 +210,13 @@ let hasOpenedChat = false;
       const res = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: chatHistory, site_id: siteId })
+        body: JSON.stringify({
+          messages: chatHistory,
+          site_id: siteId,
+          session_id: sessionId,
+          user_id: userId,
+          page_url: window.location.href
+        })
       });
 
       const data = await res.json();
