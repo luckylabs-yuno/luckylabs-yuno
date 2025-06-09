@@ -1,4 +1,5 @@
 (() => {
+  
   const API_URL = "https://luckylabs.pythonanywhere.com/ask";
 
   // --- Site ID from script tag ---
