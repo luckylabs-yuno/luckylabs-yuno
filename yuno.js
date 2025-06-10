@@ -1,12 +1,10 @@
 (() => {
   document.addEventListener("DOMContentLoaded", () => {
-    // ---- Step 1: Detect site_id from the script tag ----
     const scriptTag = [...document.getElementsByTagName("script")].find(s => s.src.includes("yuno.js"));
     const siteId = scriptTag?.getAttribute("site_id") || "default_site";
+    const API_URL = "https://luckylabs.pythonanywhere.com/ask";
 
-    // ---- Step 2: Setup user/session IDs ----
     const now = Date.now();
-
     let sessionId = localStorage.getItem("yuno_session_id");
     let lastActive = parseInt(localStorage.getItem("yuno_last_active") || "0");
     if (!sessionId || now - lastActive > 30 * 60 * 1000) {
@@ -21,13 +19,14 @@
       localStorage.setItem("yuno_user_id", userId);
     }
 
-    // ---- Step 3: Inject Mixpanel and Sentry ----
     const mixpanelScript = document.createElement("script");
     mixpanelScript.src = "https://cdn.jsdelivr.net/npm/mixpanel-browser/build/mixpanel.umd.min.js";
     mixpanelScript.onload = () => {
       mixpanel.init("YOUR_MIXPANEL_PROJECT_TOKEN", { debug: true });
       mixpanel.identify(userId);
-      mixpanel.track("chat_widget_loaded", { site_id, session_id, page_url: window.location.href });
+      mixpanel.track("chat_widget_loaded", {
+        site_id, session_id, page_url: window.location.href
+      });
     };
     document.head.appendChild(mixpanelScript);
 
@@ -42,105 +41,50 @@
     };
     document.head.appendChild(sentryScript);
 
-    const API_URL = "https://luckylabs.pythonanywhere.com/ask";
-
-    // ---- Step 4: Inject CSS ----
     const style = document.createElement("style");
     style.textContent = `
       #yuno-bubble {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        width: 60px;
-        height: 60px;
-        background: #4f46e5;
-        border-radius: 50%;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        cursor: pointer;
-        z-index: 9999;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 30px;
+        position: fixed; bottom: 20px; right: 20px;
+        width: 60px; height: 60px; background: #4f46e5;
+        border-radius: 50%; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        cursor: pointer; z-index: 9999;
+        display: flex; align-items: center; justify-content: center;
+        color: white; font-size: 30px;
       }
       #yuno-teaser {
-        position: fixed;
-        bottom: 90px;
-        right: 90px;
-        background: white;
-        padding: 8px 14px;
-        border-radius: 18px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-        font-size: 14px;
-        color: #111;
-        cursor: pointer;
-        z-index: 9999;
-        transition: opacity 0.5s;
+        position: fixed; bottom: 90px; right: 90px;
+        background: white; padding: 8px 14px; border-radius: 18px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.15); font-size: 14px;
+        color: #111; cursor: pointer; z-index: 9999; transition: opacity 0.5s;
       }
       #yuno-chatbox {
-        position: fixed;
-        bottom: 90px;
-        right: 20px;
-        width: 300px;
-        max-height: 400px;
-        background: white;
-        border: 1px solid #ddd;
-        border-radius: 10px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        display: none;
-        flex-direction: column;
-        overflow: hidden;
-        z-index: 9999;
-        font-family: sans-serif;
+        position: fixed; bottom: 90px; right: 20px; width: 300px;
+        max-height: 400px; background: white; border: 1px solid #ddd;
+        border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        display: none; flex-direction: column; overflow: hidden;
+        z-index: 9999; font-family: sans-serif;
       }
-      #yuno-messages {
-        padding: 10px;
-        flex: 1;
-        overflow-y: auto;
-        font-size: 14px;
-      }
-      #yuno-input {
-        display: flex;
-        border-top: 1px solid #eee;
-      }
+      #yuno-messages { padding: 10px; flex: 1; overflow-y: auto; font-size: 14px; }
+      #yuno-input { display: flex; border-top: 1px solid #eee; }
       #yuno-input input {
-        flex: 1;
-        padding: 10px;
-        border: none;
-        outline: none;
-        font-size: 14px;
+        flex: 1; padding: 10px; border: none; outline: none; font-size: 14px;
       }
       #yuno-input button {
-        background: #4f46e5;
-        color: white;
-        border: none;
-        padding: 10px 15px;
-        cursor: pointer;
+        background: #4f46e5; color: white; border: none;
+        padding: 10px 15px; cursor: pointer;
       }
-      .yuno-msg {
-        margin-bottom: 10px;
-      }
-      .yuno-msg.user {
-        text-align: right;
-        color: #4f46e5;
-      }
-      .yuno-msg.bot {
-        text-align: left;
-        color: #111827;
-      }
+      .yuno-msg { margin-bottom: 10px; }
+      .yuno-msg.user { text-align: right; color: #4f46e5; }
+      .yuno-msg.bot { text-align: left; color: #111827; }
       .yuno-msg.typing::after {
-        content: "⌛";
-        animation: blink 1s infinite;
+        content: "⌛"; animation: blink 1s infinite;
       }
       @keyframes blink {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.4; }
+        0%, 100% { opacity: 1; } 50% { opacity: 0.4; }
       }
     `;
     document.head.appendChild(style);
 
-    // ---- Step 5: Build DOM ----
     const bubble = document.createElement("div");
     bubble.id = "yuno-bubble";
     bubble.textContent = "💬";
@@ -192,33 +136,6 @@
       if (typing) typing.remove();
     };
 
-    teaser.onclick = () => {
-      chatbox.style.display = "flex";
-      teaser.style.display = "none";
-      if (!hasOpenedChat) {
-        addMessage("Hey! Need help with shipping or anything?", "bot");
-        chatHistory.push({ role: "assistant", content: "Hey! Need help with shipping or anything?" });
-        hasOpenedChat = true;
-      }
-    };
-
-    bubble.onclick = () => {
-      const isOpen = chatbox.style.display === "flex";
-      chatbox.style.display = isOpen ? "none" : "flex";
-      teaser.style.display = "none";
-      if (!hasOpenedChat && !isOpen) {
-        addMessage("Hey! Need help with shipping or anything?", "bot");
-        chatHistory.push({ role: "assistant", content: "Hey! Need help with shipping or anything?" });
-        hasOpenedChat = true;
-      }
-      mixpanel.track("chat_opened", { session_id, site_id });
-    };
-
-    button.onclick = sendMessage;
-    input.addEventListener("keydown", e => {
-      if (e.key === "Enter") sendMessage();
-    });
-
     const sendMessage = async () => {
       const text = input.value.trim();
       if (!text) return;
@@ -266,5 +183,36 @@
         mixpanel.track("frontend_error", { error: e.message, session_id, site_id });
       }
     };
+
+    teaser.onclick = () => {
+      chatbox.style.display = "flex";
+      teaser.style.display = "none";
+      if (!hasOpenedChat) {
+        addMessage("Hey! Need help with shipping or anything?", "bot");
+        chatHistory.push({ role: "assistant", content: "Hey! Need help with shipping or anything?" });
+        hasOpenedChat = true;
+      }
+    };
+
+    bubble.onclick = () => {
+      const isOpen = chatbox.style.display === "flex";
+      chatbox.style.display = isOpen ? "none" : "flex";
+      teaser.style.display = "none";
+      if (!hasOpenedChat && !isOpen) {
+        addMessage("Hey! Need help with shipping or anything?", "bot");
+        chatHistory.push({ role: "assistant", content: "Hey! Need help with shipping or anything?" });
+        hasOpenedChat = true;
+      }
+      mixpanel.track("chat_opened", { session_id, site_id });
+    };
+
+    button.onclick = sendMessage;
+    input.addEventListener("keydown", e => {
+      if (e.key === "Enter") sendMessage();
+    });
+
+    setTimeout(() => {
+      teaser.style.opacity = 0;
+    }, 15000);
   });
 })();
