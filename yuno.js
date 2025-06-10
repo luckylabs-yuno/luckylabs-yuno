@@ -5,11 +5,11 @@
     const site_id = scriptTag?.getAttribute("site_id") || "default_site";
 
     const now = Date.now();
-    let sessionId = localStorage.getItem("yuno_session_id");
+    let session_id = localStorage.getItem("yuno_session_id");
     let lastActive = parseInt(localStorage.getItem("yuno_last_active") || "0");
-    if (!sessionId || now - lastActive > 30 * 60 * 1000) {
-      sessionId = crypto.randomUUID();
-      localStorage.setItem("yuno_session_id", sessionId);
+    if (!session_id || now - lastActive > 30 * 60 * 1000) {
+      session_id = crypto.randomUUID();
+      localStorage.setItem("yuno_session_id", session_id);
     }
     localStorage.setItem("yuno_last_active", now);
 
