@@ -1,8 +1,8 @@
 (() => {
   document.addEventListener("DOMContentLoaded", () => {
+    const API_URL = "https://luckylabs.pythonanywhere.com/ask";
     const scriptTag = [...document.getElementsByTagName("script")].find(s => s.src.includes("yuno.js"));
     const siteId = scriptTag?.getAttribute("site_id") || "default_site";
-    const API_URL = "https://luckylabs.pythonanywhere.com/ask";
 
     const now = Date.now();
     let sessionId = localStorage.getItem("yuno_session_id");
@@ -19,28 +19,7 @@
       localStorage.setItem("yuno_user_id", userId);
     }
 
-    const mixpanelScript = document.createElement("script");
-    mixpanelScript.src = "https://cdn.jsdelivr.net/npm/mixpanel-browser/build/mixpanel.umd.min.js";
-    mixpanelScript.onload = () => {
-      mixpanel.init("YOUR_MIXPANEL_PROJECT_TOKEN", { debug: true });
-      mixpanel.identify(userId);
-      mixpanel.track("chat_widget_loaded", {
-        site_id, session_id, page_url: window.location.href
-      });
-    };
-    document.head.appendChild(mixpanelScript);
-
-    const sentryScript = document.createElement("script");
-    sentryScript.src = "https://browser.sentry-cdn.com/7.104.0/bundle.min.js";
-    sentryScript.crossOrigin = "anonymous";
-    sentryScript.onload = () => {
-      Sentry.init({
-        dsn: "YOUR_SENTRY_DSN",
-        tracesSampleRate: 1.0
-      });
-    };
-    document.head.appendChild(sentryScript);
-
+    // CSS
     const style = document.createElement("style");
     style.textContent = `
       #yuno-bubble {
@@ -55,7 +34,7 @@
         position: fixed; bottom: 90px; right: 90px;
         background: white; padding: 8px 14px; border-radius: 18px;
         box-shadow: 0 2px 10px rgba(0,0,0,0.15); font-size: 14px;
-        color: #111; cursor: pointer; z-index: 9999; transition: opacity 0.5s;
+        color: #111; cursor: pointer; z-index: 9999;
       }
       #yuno-chatbox {
         position: fixed; bottom: 90px; right: 20px; width: 300px;
@@ -85,6 +64,7 @@
     `;
     document.head.appendChild(style);
 
+    // DOM
     const bubble = document.createElement("div");
     bubble.id = "yuno-bubble";
     bubble.textContent = "💬";
@@ -143,8 +123,6 @@
       chatHistory.push({ role: "user", content: text });
       input.value = "";
 
-      mixpanel.track("message_sent", { session_id, site_id, user_id, text });
-
       addTyping();
       try {
         const res = await fetch(API_URL, {
@@ -168,19 +146,10 @@
         } else {
           addMessage("Hmm, I couldn't find anything useful.", "bot");
         }
-
-        mixpanel.track("message_received", {
-          session_id,
-          site_id,
-          content: data.content,
-          lead: data.leadTriggered
-        });
-
       } catch (e) {
         removeTyping();
         addMessage("Oops! Something went wrong.", "bot");
-        Sentry.captureException(e);
-        mixpanel.track("frontend_error", { error: e.message, session_id, site_id });
+        console.error("Yuno error:", e);
       }
     };
 
@@ -203,7 +172,6 @@
         chatHistory.push({ role: "assistant", content: "Hey! Need help with shipping or anything?" });
         hasOpenedChat = true;
       }
-      mixpanel.track("chat_opened", { session_id, site_id });
     };
 
     button.onclick = sendMessage;
