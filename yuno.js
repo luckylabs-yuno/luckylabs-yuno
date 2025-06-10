@@ -141,14 +141,14 @@
         removeTyping();
 
         if (data.content) {
-          addMessage(data.content, "bot");
-          chatHistory.push({ role: "assistant", content: data.content });
+          addMessage(data.content, "yuno");
+          chatHistory.push({ role: "system", content: data.content });
         } else {
-          addMessage("Hmm, I couldn't find anything useful.", "bot");
+          addMessage("Hmm, I couldn't find anything useful.", "yuno");
         }
       } catch (e) {
         removeTyping();
-        addMessage("Oops! Something went wrong.", "bot");
+        addMessage("Oops! Something went wrong.", "yuno");
         console.error("Yuno error:", e);
       }
     };
@@ -157,8 +157,8 @@
       chatbox.style.display = "flex";
       teaser.style.display = "none";
       if (!hasOpenedChat) {
-        addMessage("Hey! Need help with shipping or anything?", "bot");
-        chatHistory.push({ role: "assistant", content: "Hey! Need help with shipping or anything?" });
+        addMessage("Hey! Need help with shipping or anything?", "yuno");
+        chatHistory.push({ role: "system", content: "Hey! Need help with shipping or anything?" });
         hasOpenedChat = true;
       }
     };
@@ -168,8 +168,8 @@
       chatbox.style.display = isOpen ? "none" : "flex";
       teaser.style.display = "none";
       if (!hasOpenedChat && !isOpen) {
-        addMessage("Hey! Need help with shipping or anything?", "bot");
-        chatHistory.push({ role: "assistant", content: "Hey! Need help with shipping or anything?" });
+        addMessage("Hey! Need help with shipping or anything?", "yuno");
+        chatHistory.push({ role: "system", content: "Hey! Need help with shipping or anything?" });
         hasOpenedChat = true;
       }
     };
