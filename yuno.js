@@ -13,10 +13,10 @@
     }
     localStorage.setItem("yuno_last_active", now);
 
-    let userId = localStorage.getItem("yuno_user_id");
-    if (!userId) {
-      userId = crypto.randomUUID();
-      localStorage.setItem("yuno_user_id", userId);
+    let user_id = localStorage.getItem("yuno_user_id");
+    if (!user_id) {
+      user_id = crypto.randomUUID();
+      localStorage.setItem("yuno_user_id", user_id);
     }
 
     // CSS
