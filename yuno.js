@@ -2,7 +2,7 @@
   document.addEventListener("DOMContentLoaded", () => {
     const API_URL = "https://luckylabs.pythonanywhere.com/ask";
     const scriptTag = [...document.getElementsByTagName("script")].find(s => s.src.includes("yuno.js"));
-    const siteId = scriptTag?.getAttribute("site_id") || "default_site";
+    const site_id = scriptTag?.getAttribute("site_id") || "default_site";
 
     const now = Date.now();
     let sessionId = localStorage.getItem("yuno_session_id");
