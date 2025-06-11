@@ -142,7 +142,7 @@
 
         if (data.content) {
           addMessage(data.content, "yuno");
-          chatHistory.push({ role: "system", content: data.content });
+          chatHistory.push({ role: "assistant", content: data.content });
         } else {
           addMessage("Hmm, I couldn't find anything useful.", "yuno");
         }
@@ -158,7 +158,7 @@
       teaser.style.display = "none";
       if (!hasOpenedChat) {
         addMessage("Hey! Need help with shipping or anything?", "yuno");
-        chatHistory.push({ role: "system", content: "Hey! Need help with shipping or anything?" });
+        chatHistory.push({ role: "assistant", content: "Hey! Need help with shipping or anything?" });
         hasOpenedChat = true;
       }
     };
@@ -169,7 +169,7 @@
       teaser.style.display = "none";
       if (!hasOpenedChat && !isOpen) {
         addMessage("Hey! Need help with shipping or anything?", "yuno");
-        chatHistory.push({ role: "system", content: "Hey! Need help with shipping or anything?" });
+        chatHistory.push({ role: "assistant", content: "Hey! Need help with shipping or anything?" });
         hasOpenedChat = true;
       }
     };
