@@ -116,6 +116,16 @@
       if (typing) typing.remove();
     };
 
+    // ➜ NEW helper: show Yuno’s follow-up prompt
+    const showFollowUp = (promptText) => {
+      setTimeout(() => {
+        addMessage(promptText, "yuno");                 // show in UI
+        chatHistory.push({ role: "assistant", content: promptText }); // log in history
+        messages.scrollTop = messages.scrollHeight;     // scroll to bottom
+      }, 1200); // 1.2-second delay feels natural
+    };
+
+
     const sendMessage = async () => {
       const text = input.value.trim();
       if (!text) return;
@@ -143,9 +153,15 @@
         if (data.content) {
           addMessage(data.content, "yuno");
           chatHistory.push({ role: "assistant", content: data.content });
+        
+          // 🔹 If backend suggests a follow-up, show it
+          if (data.follow_up && data.follow_up_prompt) {
+            showFollowUp(data.follow_up_prompt);
+          }
         } else {
           addMessage("Hmm, I couldn't find anything useful.", "yuno");
         }
+
       } catch (e) {
         removeTyping();
         addMessage("Oops! Something went wrong.", "yuno");
