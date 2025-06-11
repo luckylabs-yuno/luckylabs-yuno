@@ -117,13 +117,14 @@
     };
 
     // ➜ NEW helper: show Yuno’s follow-up prompt
-    const showFollowUp = (promptText) => {
-      setTimeout(() => {
-        addMessage(promptText, "yuno");                 // show in UI
-        chatHistory.push({ role: "assistant", content: promptText }); // log in history
-        messages.scrollTop = messages.scrollHeight;     // scroll to bottom
-      }, 1200); // 1.2-second delay feels natural
-    };
+//I have commented out the below code because it is breaking the json generation    
+    //const showFollowUp = (promptText) => {
+      //setTimeout(() => {
+        //addMessage(promptText, "yuno");                 // show in UI
+        //chatHistory.push({ role: "assistant", content: promptText }); // log in history
+        //messages.scrollTop = messages.scrollHeight;     // scroll to bottom
+      //}, 1200); // 1.2-second delay feels natural
+    //};
 
 
     const sendMessage = async () => {
@@ -154,10 +155,11 @@
           addMessage(data.content, "yuno");
           chatHistory.push({ role: "assistant", content: data.content });
         
-          // 🔹 If backend suggests a follow-up, show it
-          if (data.follow_up && data.follow_up_prompt) {
-            showFollowUp(data.follow_up_prompt);
-          }
+// 🔹 If backend suggests a follow-up, show it.
+//I have commented out the below code because it is breaking the json generation
+         // if (data.follow_up && data.follow_up_prompt) {
+          //  showFollowUp(data.follow_up_prompt);
+          //}
         } else {
           addMessage("Hmm, I couldn't find anything useful.", "yuno");
         }
