@@ -1,3 +1,5 @@
+# Instrumented and annotated version of your /ask endpoint with full Sentry + debug logging
+
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 import os
@@ -5,16 +7,15 @@ import re
 import json
 import openai
 import requests
-import instaloader
-import yt_dlp
 import logging
 from uuid import uuid4
 from dotenv import load_dotenv
 from typing import List
 from supabase import create_client, Client
-from youtube_transcript_api import YouTubeTranscriptApi
-from newspaper import Article
 from datetime import datetime
+import sentry_sdk
+from sentry_sdk.integrations.flask import FlaskIntegration
+from mixpanel import Mixpanel
 
 # ---------------------- Environment Setup -----------------------
 load_dotenv(dotenv_path="/home/luckylabs/mysite/.env")
@@ -22,10 +23,21 @@ load_dotenv(dotenv_path="/home/luckylabs/mysite/.env")
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-SUPABASE_FUNCTION_URL = f"{SUPABASE_URL}/rest/v1/rpc/yunosearch"
+SENTRY_DSN = os.getenv("SENTRY_DSN")
+MIXPANEL_TOKEN = os.getenv("MIXPANEL_TOKEN")
 
+SUPABASE_FUNCTION_URL = f"{SUPABASE_URL}/rest/v1/rpc/yunosearch"
 openai.api_key = OPENAI_API_KEY
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+mp = Mixpanel(MIXPANEL_TOKEN)
+
+# ---------------------- Sentry Setup -----------------------
+sentry_sdk.init(
+    dsn=SENTRY_DSN,
+    integrations=[FlaskIntegration()],
+    traces_sample_rate=1.0,
+    send_default_pii=True
+)
 
 # ---------------------- Logging Setup -----------------------
 logging.basicConfig(
@@ -38,70 +50,122 @@ logging.basicConfig(
 app = Flask(__name__)
 CORS(app)
 
-# ---------------------- System Prompt -----------------------
+# ---------------------- Constants -----------------------
 SYSTEM_PROMPT = """
-> You are Yuno, a warm, helpful assistant who chats with visitors about a website’s products, policies, and info. You use the content you’re given (from the website and by the owner) to answer questions simply, clearly, and like a kind human—not a chatbot.
+You are Yuno, a warm, helpful assistant who chats with visitors about a website’s products, policies, or info.
+You must answer simply, clearly, and like a kind human—not a chatbot.
 
-Here’s how you should respond:
+Guidelines
+----------
+• Keep replies short and friendly (2-3 sentences).
+• Use casual language—“Hey!” / “Sure!” is fine.
+• If the info exists, answer in ≤2 sentences.
+• If the info is missing, do **not** guess. Politely direct the visitor to our support email.
+• Speak as part of the team (“we”, “our”), never third-person.
+• Use the full chat history for context; avoid needless repetition.
+• If the visitor’s question is vague, ask follow-up politely.
+• Never invent facts outside provided context.
+• If the visitor shows purchase / booking intent, ask for contact details and set **leadTriggered=true** once you have either email or phone (plus inferred name if possible).
 
-* Keep it short and friendly. 2-3 sentences is perfect.
-* Use natural, casual language—like you're texting someone politely. A little “Hey!” or “Sure!” is totally fine.
-* If you do find the answer in the info, explain it clearly in a two sentence.
-* If the info isn’t there, don’t guess. Just say something helpful and guide the visitor to contact us. For example: “Hmm, I didn’t see that info here—but feel free to email us at [care@example.com] and we’ll help out! 😊”
+════════════════  ABSOLUTE JSON-ONLY RESPONSE RULE  ════════════════
+You must reply **only** with a single JSON object that matches exactly
+one of the schemas below—no markdown, no plain text.
 
-* You are part of the website team—don’t refer to it in third person. Say “we” or “our team” instead of “their team.”
-* If the visitor follows up or refers to a previous message, use the full message history for context. Don’t repeat yourself unless it helps.
-* If the visitor’s message is vague or unclear, refer his previous message and your previous response but if its still unclear than ask politely for more info. Example: “Hey! Could you tell me a bit more so I can help better? 😊”
-* If sharing contact info or links, keep it simple. Example: “You can email us at [hello@example.com](mailto:hello@example.com)” or “Check out our FAQs on the Help page.”
-* Never make anything up. Only answer based on what’s in the context you’re given.
-* If the visitor seems interested in a purchase, appointment, or other “lead” intent, then continue that with asking more contact info so that team can connect to them and once we have name (actual or inferred from email) and definitely one of the Email or Phone number than send the flag leadTriggered as True, with the name, email or phone or both as in the respective fields refer below.
-
----
-
-### JSON Output Rules:
-
-* Your entire response **must ONLY be valid JSON** and follow this structure **exactly**:
-
-#### 🟢 If you are answering normally:
+🟢 Normal answer (no lead captured)
 {
-  "content": "Your short helpful response",
-  "role": "yuno",
-  "leadTriggered": false
+  "content":               "<short helpful response>",
+  "role":                  "yuno",
+  "leadTriggered":         false,
+
+  "lang":                  "<two-letter code, e.g. 'en' or 'hi'>",
+  "answer_confidence":      <float 0-1>,
+  "intent":                "<high-level intent label or null>",
+  "tokens_used":            <integer>,                        // prompt+completion
+  "follow_up":     <true|false>,
+  "follow_up_prompt":        "<optional follow-up question or null>",
+  "user_sentiment":         "<positive|neutral|negative>",
+  "compliance_red_flag":     <true|false>
 }
 
-
-#### 🟡 If the visitor seems interested in a purchase, appointment, or other “lead” intent, but only when email of phone at least 1 is available.
-
-Return this structure:
+🟡 Lead intent captured (email or phone present)
 {
-  "content": "Your short helpful response",
-  "role": "yuno",
-  "leadTriggered": true,
+  "content":               "<short helpful response>",
+  "role":                  "yuno",
+  "leadTriggered":         true,
+
   "lead": {
-    "name": "Guessed name from message if available or leave null",
-    "email": "Extracted or null",
-    "phone": "Extracted or null",
-    "intent": "Brief summary of what the visitor seems to want"
-  }
+    "name":   "<inferred or null>",
+    "email":  "<extracted or null>",
+    "phone":  "<extracted or null>",
+    "intent": "<brief summary of what the visitor wants>"
+  },
+
+  "lang":                  "<two-letter code>",
+  "answer_confidence":      <float 0-1>,
+  "intent":                "<label>",
+  "tokens_used":            <integer>,
+  "follow_up":     <true|false>,
+  "follow_up_prompt":        "<prompt or null>",
+  "user_sentiment":         "<positive|neutral|negative>",
+  "compliance_red_flag":     <true|false>
 }
 
-#### 🔴 If you can’t answer:
+🔴 Cannot answer
 {
-  "content": "Hmm, I didn’t see that info here—but feel free to email us at care@example.com and we’ll help out! 😊",
-  "role": "yuno",
-  "leadTriggered": false
+  "content": "Hmm, I didn’t see that info here — but feel free to email us at care@example.com and we’ll help out! 😊",
+  "role":    "yuno",
+  "leadTriggered": false,
+
+  "lang":                  "<code>",
+  "answer_confidence":      0.0,
+  "intent":                null,
+  "tokens_used":            <integer>,
+  "follow_up":     false,
+  "follow_up_prompt":        null,
+  "user_sentiment":         "neutral",
+  "compliance_red_flag":     false
 }
+
+IMPORTANT
+---------
+* Always include every key shown in the chosen schema.
+* `lang`, `answerConfidence`, `tokensUsed`, `followUpSuggested`, `userSentiment`, and `complianceRedFlag` are **required** in all cases.
+* `sourceChunks` may be empty if nothing was retrieved.
+* Do **not** output any additional keys or free text.
+* Respond with **exactly one** JSON object.
 
 
 """
 
-# ---------------------- Embedding + Search -----------------------
+REWRITER_PROMPT = """
+You are an assistant that rewrites a user’s query using recent chat history.
+Your goal is to combine the current user message and past conversation into
+a clear, standalone query. Use complete language. Do not mention the history.
+
+For eg -
+User - Tell me about your services?
+You - We offer MBA, BBA, MTech
+User - Wow, tell me about second one?
+
+so in this case you will respond with this type of query - "Wow can you tell me more about your BBA services"
+
+The idea is we will use this for RAG based vector search, so we will need exact query so that query is as meaningful as possible.
+IF You think that latest User message is not related to previous conversation and it would make sense for RAG search to just use the latest message, so just rewrite the latest message properly.
+Just output the rewritten query as a single sentence.
+
+Chat History:
+{history}
+
+User's New Message:
+{latest}
+
+Rewritten Query:
+"""
+
+# ---------------------- Utility Functions -----------------------
 def get_embedding(text: str) -> List[float]:
-    response = openai.embeddings.create(
-        input=text,
-        model="text-embedding-3-small"
-    )
-    return response.data[0].embedding
+    embedding = openai.embeddings.create(input=text, model="text-embedding-3-small")
+    return embedding.data[0].embedding
 
 def semantic_search(query_embedding: List[float], site_id: str) -> List[dict]:
     headers = {
@@ -118,36 +182,64 @@ def semantic_search(query_embedding: List[float], site_id: str) -> List[dict]:
     response.raise_for_status()
     return response.json()
 
-# ---------------------- /ask Endpoint -----------------------
-def insert_chat_message(site_id, session_id, user_id, page_url, role, content, raw_json_output=None):
+def insert_chat_message(
+        site_id, session_id, user_id, page_url,
+        role, content,
+        raw_json_output=None,
+        *,                       # everything after * is optional & named
+        lang=None,
+        confidence=None,
+        intent=None,
+        tokens_used=None,
+        follow_up=None,
+        follow_up_prompt=None,
+        sentiment=None,
+        compliance_flag=None):
+    """Write one chat turn into chat_history (Supabase)."""
+
     payload = {
-        "site_id": site_id,
-        "session_id": session_id,
-        "user_id": user_id,
-        "page_url": page_url,
-        "role": role,
-        "content": content,
-        "timestamp": datetime.utcnow().isoformat(),
+        "site_id":   site_id,
+        "session_id":session_id,
+        "user_id":   user_id,
+        "page_url":  page_url,
+        "role":      role,
+        "content":   content,
+        "timestamp": datetime.utcnow().isoformat()
     }
-    if raw_json_output:
+
+    # core JSON blob for audit
+    if raw_json_output is not None:
         payload["raw_json_output"] = raw_json_output
 
+    # ---- new analytic columns (insert only if not None) ----
+    if lang               is not None: payload["lang"]                = lang
+    if confidence         is not None: payload["answer_confidence"]   = confidence
+    if intent             is not None: payload["intent"]              = intent
+    if tokens_used        is not None: payload["tokens_used"]         = tokens_used
+    if follow_up          is not None: payload["follow_up"]           = follow_up
+    if follow_up_prompt   is not None: payload["follow_up_prompt"]    = follow_up_prompt
+    if sentiment          is not None: payload["user_sentiment"]      = sentiment
+    if compliance_flag    is not None: payload["compliance_red_flag"] = compliance_flag
+
     headers = {
-        "apikey": SUPABASE_KEY,
-        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "apikey":       SUPABASE_KEY,
+        "Authorization":f"Bearer {SUPABASE_KEY}",
         "Content-Type": "application/json"
     }
 
-    response = requests.post(
+    logging.debug("Inserting chat message into Supabase: %s", payload)
+    sentry_sdk.set_extra(f"supabase_chat_insert_{role}", payload)
+
+    requests.post(
         f"{SUPABASE_URL}/rest/v1/chat_history",
         headers=headers,
         data=json.dumps(payload)
     )
-    logging.debug("Chat history insert status: %s %s", response.status_code, response.text)
-    response.raise_for_status()
-
 
 def insert_lead(lead_data):
+    logging.debug("Inserting lead: %s", lead_data)
+    sentry_sdk.set_extra("supabase_lead_data", lead_data)
+
     headers = {
         "apikey": SUPABASE_KEY,
         "Authorization": f"Bearer {SUPABASE_KEY}",
@@ -155,241 +247,258 @@ def insert_lead(lead_data):
     }
     requests.post(f"{SUPABASE_URL}/rest/v1/leads", headers=headers, data=json.dumps(lead_data))
 
+def rewrite_query_with_context(history: List[dict], latest: str) -> str:
+    try:
+        chat_log = "\n".join([
+            f"{'You' if m['role'] in ['assistant', 'yuno', 'bot'] else 'User'}: {m['content']}"
+            for m in history
+        ])
 
+
+        prompt = REWRITER_PROMPT.format(history=chat_log, latest=latest)
+
+        response = openai.chat.completions.create(
+            model="gpt-4.1-nano-2025-04-14",  # or gpt-4o-mini if needed
+            messages=[{ "role": "user", "content": prompt }],
+            temperature=0.3
+        )
+
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        logging.warning("Query rewrite failed: %s", str(e))
+        return latest
+
+
+# ---------------------- /ask Endpoint -----------------------
 @app.route("/ask", methods=["POST"])
 def ask_endpoint():
     data = request.get_json()
     logging.debug("Incoming /ask request: %s", json.dumps(data, indent=2))
+    sentry_sdk.set_extra("incoming_request_data", data)
 
     messages = data.get("messages")
     site_id = data.get("site_id")
     user_id = data.get("user_id")
     session_id = data.get("session_id")
     page_url = data.get("page_url")
+    distinct_id = user_id or session_id or "anonymous"
 
-    if not messages or not site_id or not session_id:
-        return jsonify({"error": "Missing messages, site_id, or session_id"}), 400
+    mp.track(distinct_id, "chat_history_received", {
+        "site_id":   site_id,
+        "session_id":session_id,
+        "chat_history": messages
+    })
 
-    try:
-        latest_user_msg = next((m for m in reversed(messages) if m["role"] == "user"), None)
-        if not latest_user_msg:
-            return jsonify({"error": "No user message found"}), 400
+    with sentry_sdk.configure_scope() as scope:
+        scope.set_tag("site_id", site_id)
+        scope.set_tag("session_id", session_id)
+        scope.set_user({"id": session_id})
 
-        latest_user_query = latest_user_msg["content"]
-        insert_chat_message(site_id, session_id, user_id, page_url, "user", latest_user_query)
+        if not messages or not site_id or not session_id:
+            return jsonify({"error": "Missing messages, site_id, or session_id"}), 400
 
-        embedding = get_embedding(latest_user_query)
-        matches = semantic_search(embedding, site_id)
+        try:
+    # ---  initialize all new flags so they always exist  ---
+            lang = None
+            confidence = None
+            intent_label = None
+            tokens_used = None
+            follow_up = None
+            follow_up_prompt = None
+            sentiment = None
+            compliance_flag = None
+            source_chunks = []
 
-        context = "\n\n".join(match.get("detail") or match.get("text") or "" for match in matches if match)
-        logging.debug("Context retrieved:\n%s", context)
+            latest_user_msg = next((m for m in reversed(messages) if m["role"] == "user"), None)
+            if not latest_user_msg:
+                return jsonify({"error": "No user message found"}), 400
 
-        updated_messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-        recent_turns = [m for m in messages if m["role"] in ("user", "yuno", "assistant")][-4:]
+            latest_user_query = latest_user_msg["content"]
+            sentry_sdk.set_extra("user_query", latest_user_query)
 
-        for m in recent_turns:
-            updated_messages.append({
-                "role": "user" if m["role"] == "user" else "assistant",
-                "content": m["content"]
+            mp.track(distinct_id, "user_message_received", {
+                "site_id": site_id,
+                "session_id": session_id,
+                "page_url": page_url,
+                "message": latest_user_query
             })
 
-        focused_prompt = f"{latest_user_query}\n\nRelevant website content:\n{context}"
-        updated_messages.append({"role": "user", "content": focused_prompt})
+            insert_chat_message(site_id, session_id, user_id, page_url, "user", latest_user_query)
 
-        completion = openai.chat.completions.create(
-            model="gpt-4o-mini-2024-07-18",
-            messages=updated_messages,
-            temperature=0.5
-        )
 
-        raw_reply = completion.choices[0].message.content.strip()
-        logging.debug("Raw reply from model:\n%s", raw_reply)
 
-        match = re.search(r"\{.*\}", raw_reply, re.DOTALL)
-        if not match:
-            return jsonify({"error": "Model returned invalid JSON.", "raw_reply": raw_reply}), 500
+            recent_history = [m for m in messages if m["role"] in ("user", "assistant", "yuno")][-6:]
+            # 3️⃣  ➜ log the slice **before** rewriting
+            mp.track(distinct_id, "rewriter_context", {
+                "site_id":    site_id,
+                "session_id": session_id,
+                "original_query": latest_user_query,
+                "context_used": [
+                    {
+                        "role": "You" if m["role"] in ("assistant", "yuno") else "User",
+                        "content": m["content"]
+                    } for m in recent_history
+                ]
+            })
+            rewritten_query = rewrite_query_with_context(recent_history, latest_user_query)
 
-        reply_json = json.loads(match.group(0))
-        assistant_content = reply_json.get("content", raw_reply)  # fallback to raw_reply if "content" is missing
+            mp.track(distinct_id, "query_rewritten", {
+                "site_id": site_id,
+                "session_id": session_id,
+                "original_query": latest_user_query,
+                "rewritten_query": rewritten_query,
+                "chat_context_used": [
+                    {
+                        "role": "You" if m["role"] in ("assistant", "yuno") else "User",
+                        "content": m["content"]
+                    }
+                    for m in recent_history
+                ]
 
-        insert_chat_message(
-            site_id,
-            session_id,
-            user_id,
-            page_url,
-            "assistant",
-            assistant_content,
-            raw_json_output=json.dumps(reply_json)  # store structured output
+            })
+
+            sentry_sdk.set_extra("rewritten_query", rewritten_query)
+            embedding = get_embedding(rewritten_query)
+
+            sentry_sdk.set_extra("embedding_vector_partial", embedding[:5])
+
+            mp.track(distinct_id, "embedding_generated", {
+                "original_query": latest_user_query,
+                "rewritten_query": rewritten_query,
+                "site_id": site_id,
+                "embedding_preview": str(embedding[:5])
+            })
+
+            matches = semantic_search(embedding, site_id)
+            sentry_sdk.set_extra("vector_search_results", matches[:3])
+
+            mp.track(distinct_id, "vector_search_performed", {
+                "site_id": site_id,
+                "session_id": session_id,
+                "match_count": len(matches),
+                "top_matches": matches[:2]  # includes first 2 chunks
+            })
+
+            context = "\n\n".join(match.get("detail") or match.get("text") or "" for match in matches if match)
+            updated_messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+            recent_turns = [m for m in messages if m["role"] in ("user", "yuno", "assistant")][-4:]
+            for m in recent_turns:
+                updated_messages.append({
+                    "role": "user" if m["role"] == "user" else "assistant",
+                    "content": m["content"]
+                })
+
+            focused_prompt = f"{latest_user_query}\n\nRelevant website content:\n{context}"
+            # after you build focused_prompt
+            updated_messages.append({
+                "role": "system",
+                "content": 'Remember: respond ONLY with a JSON object in the schema {"content": "...", "role":"yuno", "leadTriggered": false}.'
+            })
+            updated_messages.append({
+                "role": "user",
+                "content": focused_prompt
+            })
+
+            sentry_sdk.set_extra("gpt_prompt", focused_prompt)
+
+            mp.track(distinct_id, "gpt_prompt_sent", {
+                "site_id": site_id,
+                "session_id": session_id,
+                "full_prompt": focused_prompt
+            })
+
+            completion = openai.chat.completions.create(
+                model="gpt-4o-mini-2024-07-18",
+                messages=updated_messages,
+                temperature=0.5
+            )
+
+            raw_reply = completion.choices[0].message.content.strip()
+            sentry_sdk.set_extra("gpt_raw_reply", raw_reply)
+
+            mp.track(distinct_id, "gpt_response_received", {
+                "site_id": site_id,
+                "session_id": session_id,
+                "raw_reply": raw_reply
+            })
+
+            match = re.search(r"\{.*\}", raw_reply, re.DOTALL)
+            if not match:
+                return jsonify({"error": "Model returned invalid JSON.", "raw_reply": raw_reply}), 500
+
+
+            reply_json = json.loads(match.group(0))
+            assistant_content = reply_json.get("content", raw_reply)
+
+            # ---- pull analytic flags right here (first time) ----
+            lang             = reply_json.get("lang")
+            confidence       = reply_json.get("answer_confidence")  # note key name change
+            intent_label     = reply_json.get("intent")
+            tokens_used      = reply_json.get("tokens_used")
+            follow_up        = reply_json.get("follow_up")
+            follow_up_prompt = reply_json.get("follow_up_prompt")
+            sentiment        = reply_json.get("user_sentiment")
+            compliance_flag  = reply_json.get("compliance_red_flag")
+            source_chunks    = reply_json.get("sourceChunks", [])
+
+            insert_chat_message(
+                site_id, session_id, user_id, page_url,
+                "assistant", assistant_content,
+                raw_json_output=json.dumps(reply_json),
+                lang=lang,
+                confidence=confidence,
+                intent=intent_label,
+                tokens_used=tokens_used,
+                follow_up=follow_up,
+                follow_up_prompt=follow_up_prompt,
+                sentiment=sentiment,
+                compliance_flag=compliance_flag
             )
 
 
-        if reply_json.get("leadTriggered"):
-            lead = reply_json.get("lead", {})
-            lead_data = {
-                "site_id": site_id,
+            if reply_json.get("leadTriggered"):
+                lead = reply_json.get("lead", {})
+                lead_data = {
+                    "site_id": site_id,
+                    "session_id": session_id,
+                    "user_id": user_id,
+                    "page_url": page_url,
+                    "name": lead.get("name"),
+                    "email": lead.get("email"),
+                    "phone": lead.get("phone"),
+                    "message": latest_user_query,
+                    "intent": lead.get("intent")
+                }
+                insert_lead(lead_data)
+
+                mp.track(distinct_id, "lead_captured", lead_data)
+
+            sentry_sdk.set_extra("frontend_response_payload", reply_json)
+
+            mp.track(distinct_id, "bot_reply_sent", {
                 "session_id": session_id,
-                "user_id": user_id,
-                "page_url": page_url,
-                "name": lead.get("name"),
-                "email": lead.get("email"),
-                "phone": lead.get("phone"),
-                "message": latest_user_query,
-                "intent": lead.get("intent")
-            }
-            insert_lead(lead_data)
+                "site_id": site_id,
+                "content": assistant_content,
+                "lead_triggered": reply_json.get("leadTriggered", False)
+            })
+
+            return jsonify(reply_json)
+
+        except Exception as e:
+            sentry_sdk.capture_exception(e)
+            mp.track(distinct_id, "server_error", {
+                "site_id": site_id,
+                "error": str(e),
+                "lang": lang,
+                "intent": intent_label
+            })
+            logging.exception("Exception in /ask")
+            return jsonify({"error": str(e)}), 500
 
 
-        return jsonify(reply_json)
-
-    except Exception as e:
-        logging.exception("Exception in /ask")
-        return jsonify({"error": str(e)}), 500
-
-
-# ---------------------- Other Utility Endpoints (no change) -----------------------
-# Keep your Instagram, transcript, YouTube, article, etc. routes as-is.
-
-
-# ---------------------- Instagram Caption -----------------------
-def clean_instagram_url(url): return url.split("?")[0]
-
-def extract_shortcode(url):
-    match = re.search(r"reel/([^/?#&]+)", url)
-    return match.group(1) if match else None
-
-@app.route("/extract", methods=["POST"])
-def extract_caption():
-    data = request.get_json()
-    url = data.get("video_url")
-
-    cleaned_url = clean_instagram_url(url)
-    shortcode = extract_shortcode(cleaned_url)
-
-    if not shortcode:
-        return jsonify({"error": "Invalid Instagram URL"}), 400
-
-    try:
-        loader = instaloader.Instaloader(
-            download_video_thumbnails=False,
-            download_comments=False,
-            save_metadata=False,
-            download_videos=False
-        )
-
-        session_path = "/home/luckylabs/mysite/session-insta_brain83"
-        loader.load_session_from_file("insta_brain83", filename=session_path)
-
-        post = instaloader.Post.from_shortcode(loader.context, shortcode)
-
-        result = {
-            "platform": "Instagram",
-            "username": post.owner_username,
-            "title": post.title or "",
-            "caption": post.caption or "",
-            "shortcode": shortcode,
-            "is_video": post.is_video,
-            "video_url": post.video_url,
-            "thumbnail_url": post.url
-        }
-        return jsonify(result)
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-# ---------------------- YouTube MP3 -----------------------
-@app.route("/transcript", methods=["POST"])
-def get_audio_from_youtube():
-    data = request.get_json()
-    url = data.get("video_url")
-
-    if not url:
-        return jsonify({"error": "Missing 'video_url' in request"}), 400
-
-    try:
-        output_dir = "/tmp"
-        filename_base = str(uuid4())
-        output_path = os.path.join(output_dir, f"{filename_base}.%(ext)s")
-
-        ydl_opts = {
-            'format': 'bestaudio/best',
-            'outtmpl': output_path,
-            'quiet': True,
-            'postprocessors': [{
-                'key': 'FFmpegExtractAudio',
-                'preferredcodec': 'mp3',
-                'preferredquality': '192',
-            }],
-        }
-
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=True)
-            mp3_file = os.path.join(output_dir, f"{filename_base}.mp3")
-
-            if not os.path.exists(mp3_file):
-                return jsonify({"error": "MP3 file not found"}), 500
-
-            return send_file(mp3_file, mimetype="audio/mpeg", as_attachment=True)
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-# ---------------------- Article Extract -----------------------
-@app.route("/article", methods=["POST"])
-def extract_article():
-    data = request.get_json()
-    url = data.get("video_url")
-
-    if not url:
-        return jsonify({"error": "Missing 'video_url' in request"}), 400
-
-    try:
-        article = Article(url)
-        article.download()
-        article.parse()
-
-        result = {
-            "platform": "Web Article",
-            "title": article.title,
-            "authors": article.authors,
-            "publish_date": article.publish_date.isoformat() if article.publish_date else None,
-            "text": article.text,
-            "top_image": article.top_image,
-            "url": url
-        }
-
-        return jsonify(result)
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-# ---------------------- YouTube Transcript -----------------------
-def extract_video_id(url: str) -> str:
-    regex = r"(?:v=|\/shorts\/|\/watch\/|\/embed\/|\/)([0-9A-Za-z_-]{11})"
-    match = re.search(regex, url)
-    return match.group(1) if match else url.strip()
-
-@app.route("/YoutubeTranscript", methods=["POST"])
-def youtube_transcript():
-    data = request.get_json()
-
-    if not data or 'url' not in data:
-        return jsonify({"error": "Missing 'url' in JSON payload"}), 400
-
-    url = data['url']
-    video_id = extract_video_id(url)
-
-    try:
-        transcript_data = YouTubeTranscriptApi.get_transcript(video_id)
-        transcript_lines = [line['text'] for line in transcript_data]
-        return jsonify({"transcript": transcript_lines})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-# ---------------------- Health -----------------------
+# ---------------------- Health Check -----------------------
 @app.route("/")
 def health():
     return "API is running.", 200
 
-
-# ---------------------- WSGI App Hook -----------------------
 application = app
