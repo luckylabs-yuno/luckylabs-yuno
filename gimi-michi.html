@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gimi Michi Demo</title>
+  <script src="https://luckylabs-yuno.github.io/luckylabs-yuno/yuno.js" site_id="gimimichi" defer></script>
+  <style>
+    :root {
+      --primary-red: #C1272D;
+      --light-gray: #F5F5F5;
+      --dark-gray: #333;
+      --font-family: 'Arial', sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font-family); color: var(--dark-gray); background: #fff; }
+    header { display: flex; justify-content: space-between; align-items: center; padding: 16px; background: var(--light-gray); }
+    header .logo { font-size: 1.5rem; font-weight: bold; color: var(--primary-red); }
+    nav a { margin-left: 16px; text-decoration: none; color: var(--dark-gray); font-weight: bold; }
+
+    .hero { background: var(--primary-red); color: #fff; text-align: center; padding: 80px 16px; }
+    .hero h1 { font-size: 2rem; margin-bottom: 0.5em; }
+    .hero p { font-size: 1rem; margin-bottom: 1em; }
+    .hero .btn { padding: 12px 24px; background: #fff; color: var(--primary-red); border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+
+    .section { padding: 40px 16px; }
+    .section h2 { margin-bottom: 16px; font-size: 1.5rem; }
+
+    .products ul { list-style: none; }
+    .products li { margin-bottom: 8px; }
+
+    .copy, .team, .motto, .subscribe { max-width: 800px; margin: 0 auto 40px; line-height: 1.6; }
+    .team p { margin-bottom: 8px; }
+
+    .motto ul { list-style: disc inside; margin-top: 8px; }
+    .motto li { margin-bottom: 8px; }
+
+    .subscribe input, .subscribe button { padding: 12px; font-size: 1rem; }
+    .subscribe input { width: 60%; max-width: 300px; border: 1px solid #ccc; border-radius: 4px; margin-right: 8px; }
+    .subscribe button { background: var(--primary-red); color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+
+    footer { text-align: center; padding: 24px 16px; background: var(--light-gray); font-size: 0.9rem; }
+    footer a { margin: 0 8px; text-decoration: none; color: var(--dark-gray); }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">Gimi Michi</div>
+    <nav>
+      <a href="#products">Shop</a>
+      <a href="#motto">About</a>
+      <a href="#subscribe">Subscribe</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <h1>GimiMichi Hot Kimchi Ramen</h1>
+    <p>Click. Eat. Thank Us Later.</p>
+    <button class="btn" onclick="window.location.href='#products'">Try Now</button>
+  </section>
+
+  <section id="products" class="section products">
+    <h2>Our Packs</h2>
+    <ul>
+      <li><strong>Chingu Box 소감 - Pack of 4</strong>: Rs. 239.00</li>
+      <li><strong>Sogam Box 소감 - Pack of 2</strong>: Rs. 119.00</li>
+      <li><strong>Daebak Box 대박 - Pack of 8</strong>: Rs. 479.00</li>
+    </ul>
+  </section>
+
+  <section class="section copy">
+    <h2>Our Story</h2>
+    <p>No fancy packaging, just bold, flavor-packed kimchi flavored ramen made for true Korean ramen lovers. Started by two MBA students in Ahmedabad, this brand values authenticity and simplicity. Join us in revolutionizing Indian ramen culture!</p>
+  </section>
+
+  <section class="section team">
+    <h2>Meet the Founders</h2>
+    <p><strong>Nishank</strong> - Co-Founder, IIM Ahmedabad</p>
+    <p><strong>Akhil</strong> - Co-Founder, IIM Ahmedabad</p>
+  </section>
+
+  <section id="motto" class="section motto">
+    <h2>Our Motto</h2>
+    <p>We deliver authentic Korean flavors with minimal fuss:</p>
+    <ul>
+      <li>Rich, umami-packed broths</li>
+      <li>Spicy, deep flavors</li>
+      <li>Affordable gourmet taste</li>
+    </ul>
+  </section>
+
+  <section id="subscribe" class="section subscribe">
+    <h2>Stay Updated</h2>
+    <input type="email" placeholder="Enter your email">
+    <button>Subscribe</button>
+  </section>
+
+  <footer>
+    <p>&copy; 2025 Gimi Michi. All Rights Reserved.</p>
+    <p><a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a></p>
+  </footer>
+</body>
+</html>
