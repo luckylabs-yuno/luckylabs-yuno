@@ -72,7 +72,7 @@
 
     const teaser = document.createElement("div");
     teaser.id = "yuno-teaser";
-    teaser.textContent = "👋 Need help with shipping or anything?";
+    teaser.textContent = "Hi there! 👋 What can I help you with today?";
     document.body.appendChild(teaser);
 
     const chatbox = document.createElement("div");
@@ -80,7 +80,7 @@
     chatbox.innerHTML = `
       <div id="yuno-messages"></div>
       <div id="yuno-input">
-        <input type="text" placeholder="Ask me anything..." />
+        <input type="text" placeholder="Type your question here..." />
         <button>Send</button>
       </div>
     `;
