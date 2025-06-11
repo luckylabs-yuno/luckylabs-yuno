@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Novelty Wealth Demo</title>
+  <script src="https://luckylabs-yuno.github.io/luckylabs-yuno/yuno.js" site_id="noveltywealth" defer></script>
+  <style>
+    :root {
+      --primary-purple: #4C46DE;
+      --accent-purple: #815BFF;
+      --light-gray: #F5F5F5;
+      --dark-gray: #333;
+      --font-family: 'Arial', sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font-family); color: var(--dark-gray); background: #fff; }
+    header { display: flex; align-items: center; justify-content: space-between; padding: 16px; }
+    .logo img { height: 40px; }
+    nav ul { list-style: none; display: flex; gap: 16px; }
+    nav a { text-decoration: none; color: var(--dark-gray); font-weight: bold; }
+
+    .hero {
+      background: #000;
+      color: #fff;
+      text-align: center;
+      padding: 100px 16px;
+    }
+    .hero h1 { font-size: 2.5rem; margin-bottom: 0.5em; }
+    .hero p { font-size: 1.25rem; margin-bottom: 1em; }
+    .hero .btn { padding: 12px 24px; background: var(--accent-purple); color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+
+    .features { padding: 40px 16px; background: var(--light-gray); }
+    .features h2 { text-align: center; font-size: 1.75rem; margin-bottom: 24px; }
+    .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; }
+    .feature { background: #fff; padding: 24px; border-radius: 8px; }
+    .feature h3 { font-size: 1.1rem; margin-bottom: 12px; }
+    .feature p { font-size: 0.95rem; line-height: 1.4; }
+
+    .process { padding: 40px 16px; }
+    .process h2 { text-align: center; font-size: 1.75rem; margin-bottom: 16px; }
+    .process ul { max-width: 600px; margin: 0 auto; list-style: decimal inside; line-height: 1.6; }
+    .process li { margin-bottom: 12px; }
+
+    .testimonials { padding: 40px 16px; background: var(--light-gray); }
+    .testimonials h2 { text-align: center; font-size: 1.75rem; margin-bottom: 24px; }
+    .test-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; }
+    .testimonial { background: #fff; padding: 24px; border-radius: 8px; text-align: center; }
+    .testimonial img { height: 64px; width: 64px; border-radius: 50%; object-fit: cover; margin-bottom: 16px; }
+    .testimonial p { font-style: italic; margin-bottom: 12px; }
+    .testimonial h4 { font-weight: bold; margin-bottom: 4px; }
+    .testimonial small { color: var(--dark-gray); }
+
+    .cta { padding: 40px 16px; text-align: center; }
+    .cta .btn { padding: 12px 24px; background: var(--primary-purple); color: #fff; border: none; border-radius: 4px; font-size: 1rem; cursor: pointer; font-weight: bold; }
+
+    footer { background: #222; color: #ccc; text-align: center; padding: 24px 16px; font-size: 0.9rem; }
+    footer a { color: #fff; text-decoration: none; margin: 0 8px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo"><img src="https://framerusercontent.com/images/DHgi41b0wafXJEQPLKffMM9Cd4.png" alt="Novelty Wealth Logo"></div>
+    <nav>
+      <ul>
+        <li><a href="#features">Our Services</a></li>
+        <li><a href="#process">How It Works</a></li>
+        <li><a href="#testimonials">Testimonials</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <h1>Unlock Your Wealth's True Potential</h1>
+    <p>Expert financial guidance, powered by cutting-edge AI and personalized strategies.</p>
+    <button class="btn" onclick="window.location.href='#features'">Explore Services</button>
+  </section>
+
+  <section id="features" class="features">
+    <h2>Our Core Services</h2>
+    <div class="feature-grid">
+      <div class="feature">
+        <h3>Comprehensive Financial Planning</h3>
+        <p>From investments to insurance and tax planning—holistic strategies tailored to your goals.</p>
+      </div>
+      <div class="feature">
+        <h3>SEBI Registered Advisor</h3>
+        <p>Regulated and trusted financial guidance to ensure your wealth decisions are secure.</p>
+      </div>
+      <div class="feature">
+        <h3>Personalized Solutions</h3>
+        <p>Bespoke financial roadmaps designed for you and your family’s unique needs.</p>
+      </div>
+      <div class="feature">
+        <h3>24/7 AI-Powered Support</h3>
+        <p>NovaAI-driven assistance that’s always available to answer your financial queries.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="process" class="process">
+    <h2>How It Works</h2>
+    <ul>
+      <li><strong>Connect Accounts</strong>: Securely link all your financial accounts in one dashboard.</li>
+      <li><strong>Diagnose Portfolio</strong>: NovaAI scans for risks, gaps, and opportunities.</li>
+      <li><strong>Build Your Roadmap</strong>: Tailored action plans that align with your goals.</li>
+      <li><strong>Review & Optimize</strong>: Continuous monitoring and smart nudges to keep you on track.</li>
+    </ul>
+  </section>
+
+  <section id="testimonials" class="testimonials">
+    <h2>Straight from Our Users</h2>
+    <div class="test-grid">
+      <div class="testimonial">
+        <img src="https://framerusercontent.com/images/S1zcBOGi8vA4L1Tq5Eu5lH7Wk.png" alt="Rohit Narula">
+        <p>“I saw value within the first week—optimized investments and plugged money leaks, resulting in 3x tangible savings.”</p>
+        <h4>Rohit Narula</h4>
+        <small>Strategy Manager</small>
+      </div>
+      <div class="testimonial">
+        <img src="https://framerusercontent.com/images/C2uRkZDb5HlP8cTYnT1rmWGo.png" alt="Major Vinay">
+        <p>“Novelty Wealth gave me control over my finances with direct mutual funds and a tailored financial plan.”</p>
+        <h4>Major Vinay</h4>
+        <small>Armed Forces</small>
+      </div>
+      <div class="testimonial">
+        <img src="https://framerusercontent.com/images/TDvXgPyK7NjL6ZsRP3aglUpb.png" alt="Abhishek Singhania">
+        <p>“NovaAI is supercool—more than information, it helps take action with your financial needs.”</p>
+        <h4>Abhishek Singhania</h4>
+        <small>Strategy Director</small>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta">
+    <button class="btn" onclick="window.location.href='https://chat.whatsapp.com/YOURLINK'">Get Early Access</button>
+  </section>
+
+  <footer>
+    <p>&copy; 2025 Novelty Wealth. All Rights Reserved.</p>
+    <p><a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a></p>
+  </footer>
+</body>
+</html>
