@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Better Nutrition Demo</title>
+  <style>
+    :root {
+      --primary-green: #388E3C;
+      --light-gray: #F5F5F5;
+      --dark-gray: #333;
+      --accent-yellow: #FFD600;
+      --font-family: 'Arial', sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font-family); color: var(--dark-gray); }
+    .top-bar {
+      background: var(--light-gray);
+      text-align: center;
+      padding: 8px;
+      font-size: 0.9rem;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+      border-bottom: 1px solid #ddd;
+    }
+    header .logo img { height: 40px; }
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 16px;
+    }
+    nav a {
+      text-decoration: none;
+      color: var(--dark-gray);
+      font-weight: bold;
+    }
+    /* Hero Slider */
+    .hero-slider { position: relative; overflow: hidden; }
+    .slides { display: flex; transition: transform 0.5s ease-in-out; }
+    .slide { min-width: 100%; }
+    .slide img { width: 100%; display: block; }
+    .slider-nav {
+      position: absolute;
+      top: 50%;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      transform: translateY(-50%);
+    }
+    .slider-nav button {
+      background: rgba(0,0,0,0.5);
+      border: none;
+      color: #fff;
+      padding: 8px;
+      cursor: pointer;
+    }
+    /* Products Grid */
+    .products { padding: 40px 16px; text-align: center; }
+    .products h2 { margin-bottom: 24px; }
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 24px;
+    }
+    .product {
+      border: 1px solid #eee;
+      padding: 16px;
+      border-radius: 8px;
+    }
+    .product img { width: 100%; border-radius: 4px; }
+    .product h3 { margin: 12px 0; font-size: 1.1rem; }
+    .product p { color: var(--primary-green); font-weight: bold; }
+    .product button {
+      margin-top: 8px;
+      padding: 8px 16px;
+      background: var(--primary-green);
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    /* Features */
+    .features { background: var(--light-gray); padding: 40px 16px; text-align: center; }
+    .feature-list { display: flex; flex-wrap: wrap; gap: 24px; justify-content: center; margin-top: 24px; }
+    .feature {
+      max-width: 240px;
+    }
+    .feature img { width: 64px; }
+    .feature h4 { margin: 12px 0; }
+    /* CTA */
+    .cta { padding: 40px 16px; text-align: center; background: var(--accent-yellow); }
+    .cta h2 { margin-bottom: 16px; }
+    .cta button {
+      padding: 12px 24px;
+      background: var(--primary-green);
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    /* Footer */
+    footer {
+      background: #222;
+      color: #ccc;
+      padding: 24px 16px;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+    footer a { color: #fff; text-decoration: none; margin: 0 8px; }
+    @media (max-width: 600px) {
+      header { flex-direction: column; align-items: flex-start; }
+      nav ul { flex-direction: column; gap: 8px; margin-top: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="top-bar">Free Shipping for orders above ₹499 | Flat 20% off - Use Code 'BetterMe'</div>
+  <header>
+    <div class="logo"><img src="https://via.placeholder.com/150x40?text=Logo" alt="Better Nutrition"></div>
+    <nav>
+      <ul>
+        <li><a href="#">Shop All</a></li>
+        <li><a href="#">Combo</a></li>
+        <li><a href="#">About Us</a></li>
+        <li><a href="#">Recipe</a></li>
+        <li><a href="#">Blogs</a></li>
+      </ul>
+    </nav>
+  </header>
+  <section class="hero-slider">
+    <div class="slides">
+      <div class="slide"><img src="https://via.placeholder.com/1200x400?text=Banner+1" alt="Banner 1"></div>
+      <div class="slide"><img src="https://via.placeholder.com/1200x400?text=Banner+2" alt="Banner 2"></div>
+      <div class="slide"><img src="https://via.placeholder.com/1200x400?text=Banner+3" alt="Banner 3"></div>
+    </div>
+    <div class="slider-nav">
+      <button id="prev">&#10094;</button>
+      <button id="next">&#10095;</button>
+    </div>
+  </section>
+  <section class="products">
+    <h2>Our Products</h2>
+    <div class="product-grid">
+      <div class="product">
+        <img src="https://via.placeholder.com/200?text=Atta" alt="Biofortified Atta">
+        <h3>Biofortified Atta</h3>
+        <p>From ₹200/kg</p>
+        <button>Add to Cart</button>
+      </div>
+      <div class="product">
+        <img src="https://via.placeholder.com/200?text=Rice" alt="Biofortified Rice">
+        <h3>Biofortified Rice</h3>
+        <p>From ₹379/kg</p>
+        <button>Add to Cart</button>
+      </div>
+      <div class="product">
+        <img src="https://via.placeholder.com/200?text=Ragi" alt="Biofortified Ragi Atta">
+        <h3>Biofortified Ragi Atta</h3>
+        <p>From ₹170/kg</p>
+        <button>Add to Cart</button>
+      </div>
+      <div class="product">
+        <img src="https://via.placeholder.com/200?text=Daliya" alt="Biofortified Daliya">
+        <h3>Biofortified Daliya</h3>
+        <p>From ₹125/kg</p>
+        <button>Add to Cart</button>
+      </div>
+    </div>
+  </section>
+  <section class="features">
+    <h2>Why Choose Better Nutrition?</h2>
+    <div class="feature-list">
+      <div class="feature">
+        <img src="https://via.placeholder.com/64?text=Icon1" alt="Biofortified Grains">
+        <h4>Biofortified Grains</h4>
+        <p>Naturally higher in zinc, iron & protein.</p>
+      </div>
+      <div class="feature">
+        <img src="https://via.placeholder.com/64?text=Icon2" alt="No Chemicals">
+        <h4>No Chemicals</h4>
+        <p>Grown in nutrient-rich soil, no shortcuts.</p>
+      </div>
+      <div class="feature">
+        <img src="https://via.placeholder.com/64?text=Icon3" alt="Farm Fresh">
+        <h4>Farm Fresh</h4>
+        <p>Partnered directly with farmers for fresh delivery.</p>
+      </div>
+    </div>
+  </section>
+  <section class="cta">
+    <h2>Time to switch to Biofortified!</h2>
+    <button>Know More</button>
+  </section>
+  <footer>
+    <p>&copy; 2025 Better Nutrition. All Rights Reserved.</p>
+    <p>
+      <a href="#">Privacy Policy</a>|
+      <a href="#">Terms of Service</a>|
+      <a href="#">Contact Us</a>
+    </p>
+  </footer>
+
+  <!-- Yuno Chatbot Widget -->
+  <script src="https://your-cdn.com/yuno-widget.js" site_id="betternutrition"></script>
+
+  <!-- Slider JavaScript -->
+  <script>
+    (function() {
+      const slides = document.querySelector('.slides');
+      const total = document.querySelectorAll('.slide').length;
+      let index = 0;
+      document.getElementById('next').addEventListener('click', () => {
+        index = (index + 1) % total;
+        slides.style.transform = `translateX(-${index * 100}%)`;
+      });
+      document.getElementById('prev').addEventListener('click', () => {
+        index = (index - 1 + total) % total;
+        slides.style.transform = `translateX(-${index * 100}%)`;
+      });
+      setInterval(() => {
+        document.getElementById('next').click();
+      }, 5000);
+    })();
+  </script>
+</body>
+</html>
