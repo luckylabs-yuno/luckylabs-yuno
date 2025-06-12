@@ -22,6 +22,7 @@
     localStorage.setItem('yuno_user_id', user_id);
   }
 
+  // Template: fixed bubble, teaser, chat panel with auto-expanding height
   const template = document.createElement('template');
   template.innerHTML = `
     <style>
@@ -73,7 +74,7 @@
         bottom: 90px;
         right: 20px;
         width: 320px;
-        height: 420px;
+        max-height: 420px;
         background: #fff;
         border: 1px solid var(--yuno-accent);
         border-radius: var(--yuno-radius);
@@ -88,6 +89,7 @@
         overflow-y: auto;
         display: flex;
         flex-direction: column;
+        justify-content: flex-end;
       }
       .input-row {
         display: flex;
@@ -120,7 +122,8 @@
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         color: #333;
       }
-      .chatbot-bubble::after {
+      /* Bot tail only */
+      .msg.bot.chatbot-bubble::after {
         content: "";
         position: absolute;
         bottom: -8px;
@@ -132,7 +135,6 @@
       .chatbot-bubble.loading {
         background: transparent;
         box-shadow: none;
-        position: relative;
         padding: 8px;
       }
       .chatbot-bubble.loading .dot {
@@ -151,6 +153,7 @@
         0%, 80%, 100% { opacity: 0.3; }
         40% { opacity: 1; }
       }
+      /* Labels */
       .msg.bot.chatbot-bubble::before {
         content: "Yuno";
         display: block;
@@ -166,18 +169,11 @@
         text-align: right;
         color: var(--yuno-accent);
       }
+      /* Simple user bubble, no tail */
       .msg.user.chatbot-bubble {
         background: #4f46e5;
         color: #fff;
-      }
-      .msg.user.chatbot-bubble::after {
-        content: "";
-        position: absolute;
-        bottom: -8px;
-        right: 24px;
-        border-width: 8px 8px 0 8px;
-        border-style: solid;
-        border-color: #4f46e5 transparent transparent transparent;
+        border-radius: 24px;
       }
     </style>
     <div class="bubble">🤝</div>
@@ -219,7 +215,7 @@
         this._box.style.display = 'flex';
         if (this._first) {
           this._addMsg('🤝 Hi! I’m Yuno—how can I help you today?', 'bot');
-          this._history.push({ role: 'assistant', content: 'Hi! I’m Yuno—how can I help you today?' });
+          this._history.push({ role: 'assistant', content: '🤝 Hi! I’m Yuno—how can I help you today?' });
           this._first = false;
         }
         this._input.focus();
