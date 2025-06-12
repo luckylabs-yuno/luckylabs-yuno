@@ -394,7 +394,7 @@
         });
         const data = await res.json(); 
         tip.remove(); 
-        this._addBotMessage(data.content||'Sorry, I couldn't find anything.');
+        this._addBotMessage(data.content||'Sorry, I couldn\'t find anything.');
       } catch(err){ 
         tip.remove(); 
         this._addBotMessage('Oops, something went wrong.'); 
