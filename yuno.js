@@ -22,7 +22,7 @@
     localStorage.setItem('yuno_user_id', user_id);
   }
 
-  // Template with fixed position, gradient bubble, handshake, teaser, chat panel
+  // Template: fixed bubble, teaser, chat panel
   const template = document.createElement('template');
   template.innerHTML = `
     <style>
@@ -142,8 +142,8 @@
         animation: blink 1.2s infinite ease-in-out;
       }
       @keyframes blink {
-        0%,80%,100% { opacity:0.3; }
-        40% { opacity:1; }
+        0%, 80%, 100% { opacity: 0.3; }
+        40% { opacity: 1; }
       }
       .msg.bot.chatbot-bubble::before {
         content: "Yuno";
@@ -175,7 +175,7 @@
       }
     </style>
     <div class="bubble">🤝</div>
-    <div class="teaser">🤝 Hi! I’m Yuno—how can I help you today?</div>
+    <div class="teaser">🤝 I’m Yuno—how can I help you today?</div>
     <div class="chatbox">
       <div class="messages"></div>
       <div class="input-row">
@@ -238,4 +238,37 @@
 
       const tip = document.createElement('div');
       tip.className = 'msg bot chatbot-bubble loading';
-      this._msgs
+      this._msgs.appendChild(tip);
+      this._msgs.scrollTop = this._msgs.scrollHeight;
+
+      try {
+        const res = await fetch('https://luckylabs.pythonanywhere.com/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            site_id: SITE_ID,
+            session_id,
+            user_id,
+            page_url: window.location.href,
+            messages: this._history
+          })
+        });
+        const data = await res.json();
+        tip.remove();
+        this._addMsg(data.content || 'Sorry, I couldn’t find anything.', 'bot');
+        this._history.push({ role: 'assistant', content: data.content });
+      } catch (err) {
+        tip.remove();
+        this._addMsg('Oops, something went wrong.', 'bot');
+        console.error('Yuno Error:', err);
+      }
+    }
+  }
+
+  customElements.define('yuno-chat', YunoChat);
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const widget = document.createElement('yuno-chat');
+    document.body.appendChild(widget);
+  });
+})();
