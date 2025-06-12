@@ -335,7 +335,7 @@
         this._bubble.style.display = 'inline-flex';
       }
       if (open && this._first) {
-        this._addBotMessage('Hi! I'm Yuno—how can I help you today?');
+        this._addBotMessage('Hi! I\'m Yuno—how can I help you today?');
         this._first = false;
       }
       if (open) {
