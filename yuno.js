@@ -1,204 +1,198 @@
+// yuno.js
 (() => {
-  document.addEventListener("DOMContentLoaded", () => {
-    const API_URL = "https://luckylabs.pythonanywhere.com/ask";
-    const scriptTag = [...document.getElementsByTagName("script")].find(s => s.src.includes("yuno.js"));
-    const site_id = scriptTag?.getAttribute("site_id") || "default_site";
+  // ──────────────── read site_id from our script tag ────────────────
+  const SCRIPT_NAME = 'yuno.js';
+  const allScripts = Array.from(document.getElementsByTagName('script'));
+  const thisScript = allScripts.find(s => s.src && s.src.includes(SCRIPT_NAME));
+  const SITE_ID = thisScript?.getAttribute('site_id') || 'default_site';
 
-    const now = Date.now();
-    let session_id = localStorage.getItem("yuno_session_id");
-    let lastActive = parseInt(localStorage.getItem("yuno_last_active") || "0");
-    if (!session_id || now - lastActive > 30 * 60 * 1000) {
-      session_id = crypto.randomUUID();
-      localStorage.setItem("yuno_session_id", session_id);
-    }
-    localStorage.setItem("yuno_last_active", now);
+  // ───────── session & user persistence ─────────
+  const NOW = Date.now();
+  let session_id = localStorage.getItem('yuno_session_id');
+  let lastActive = parseInt(localStorage.getItem('yuno_last_active') || '0', 10);
+  if (!session_id || NOW - lastActive > 30 * 60 * 1000) {
+    session_id = crypto.randomUUID();
+    localStorage.setItem('yuno_session_id', session_id);
+  }
+  localStorage.setItem('yuno_last_active', NOW);
 
-    let user_id = localStorage.getItem("yuno_user_id");
-    if (!user_id) {
-      user_id = crypto.randomUUID();
-      localStorage.setItem("yuno_user_id", user_id);
-    }
+  let user_id = localStorage.getItem('yuno_user_id');
+  if (!user_id) {
+    user_id = crypto.randomUUID();
+    localStorage.setItem('yuno_user_id', user_id);
+  }
 
-    // CSS
-    const style = document.createElement("style");
-    style.textContent = `
-      #yuno-bubble {
+  // ───────── define our Web Component ─────────
+  const template = document.createElement('template');
+  template.innerHTML = `
+    <style>
+      :host {
+        --yuno-primary: #4f46e5;
+        --yuno-accent:  #22d3ee;
+        --yuno-bg:      rgba(255,255,255,0.7);
+        --yuno-radius:  12px;
+        --yuno-font:    'Segoe UI', sans-serif;
+        position: fixed; bottom: 0; right: 0;
+        font-family: var(--yuno-font);
+        z-index: 9999;
+      }
+      .bubble {
         position: fixed; bottom: 20px; right: 20px;
-        width: 60px; height: 60px; background: #4f46e5;
-        border-radius: 50%; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        cursor: pointer; z-index: 9999;
+        width: 60px; height: 60px;
+        background: var(--yuno-bg);
+        backdrop-filter: blur(10px);
+        border: 2px solid var(--yuno-accent);
+        border-radius: 50%;
         display: flex; align-items: center; justify-content: center;
-        color: white; font-size: 30px;
+        color: var(--yuno-primary);
+        font-size: 28px; cursor: pointer;
+        animation: pulse 2s infinite ease-in-out;
       }
-      #yuno-teaser {
-        position: fixed; bottom: 90px; right: 90px;
-        background: white; padding: 8px 14px; border-radius: 18px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.15); font-size: 14px;
-        color: #111; cursor: pointer; z-index: 9999;
+      @keyframes pulse {
+        0%,100% { transform: scale(1); }
+        50%     { transform: scale(1.1); }
       }
-      #yuno-chatbox {
-        position: fixed; bottom: 90px; right: 20px; width: 300px;
-        max-height: 400px; background: white; border: 1px solid #ddd;
-        border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      .chatbox {
+        position: fixed; bottom: 90px; right: 20px;
+        width: 320px; max-height: 420px;
+        background: var(--yuno-bg);
+        backdrop-filter: blur(12px);
+        border-radius: var(--yuno-radius);
+        border: 1px solid var(--yuno-accent);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.2);
         display: none; flex-direction: column; overflow: hidden;
-        z-index: 9999; font-family: sans-serif;
+        animation: slide-up 0.3s ease-out;
       }
-      #yuno-messages { padding: 10px; flex: 1; overflow-y: auto; font-size: 14px; }
-      #yuno-input { display: flex; border-top: 1px solid #eee; }
-      #yuno-input input {
-        flex: 1; padding: 10px; border: none; outline: none; font-size: 14px;
+      @keyframes slide-up {
+        from { transform: translateY(20px); opacity: 0; }
+        to   { transform: translateY(0);      opacity: 1; }
       }
-      #yuno-input button {
-        background: #4f46e5; color: white; border: none;
-        padding: 10px 15px; cursor: pointer;
+      .messages {
+        padding: 12px; flex: 1; overflow-y: auto;
+        font-size: 14px; color: #111;
       }
-      .yuno-msg { margin-bottom: 10px; }
-      .yuno-msg.user { text-align: right; color: #4f46e5; }
-      .yuno-msg.bot { text-align: left; color: #111827; }
-      .yuno-msg.typing::after {
-        content: "⌛"; animation: blink 1s infinite;
+      .input-row {
+        display: flex;
+        border-top: 1px solid rgba(0,0,0,0.1);
       }
-      @keyframes blink {
-        0%, 100% { opacity: 1; } 50% { opacity: 0.4; }
+      .input-row input {
+        flex: 1; border: none;
+        padding: 10px; font-size: 14px;
+        background: transparent; outline: none;
       }
-    `;
-    document.head.appendChild(style);
+      .input-row button {
+        background: var(--yuno-primary);
+        color: #fff; border: none;
+        padding: 0 16px; cursor: pointer;
+      }
+      .msg { margin: 8px 0; line-height: 1.4; word-wrap: break-word; }
+      .msg.user { text-align: right; color: var(--yuno-primary); }
+      .msg.bot  { text-align: left;  color: #333; }
+      .msg.typing::after {
+        content: '';
+        display: inline-block;
+        width: 16px; height: 4px;
+        background: #ccc;
+        border-radius: 2px;
+        margin-left: 6px;
+        animation: typing 1s infinite steps(3, end);
+      }
+      @keyframes typing {
+        0%   { background-position: 0   0; }
+        100% { background-position: -48px 0; }
+      }
+    </style>
 
-    // DOM
-    const bubble = document.createElement("div");
-    bubble.id = "yuno-bubble";
-    bubble.textContent = "💬";
-    document.body.appendChild(bubble);
-
-    const teaser = document.createElement("div");
-    teaser.id = "yuno-teaser";
-    teaser.textContent = "Hi there! 👋 What can I help you with today?";
-    document.body.appendChild(teaser);
-
-    const chatbox = document.createElement("div");
-    chatbox.id = "yuno-chatbox";
-    chatbox.innerHTML = `
-      <div id="yuno-messages"></div>
-      <div id="yuno-input">
-        <input type="text" placeholder="Type your question here..." />
+    <div class="bubble">💬</div>
+    <div class="chatbox">
+      <div class="messages"></div>
+      <div class="input-row">
+        <input type="text" placeholder="Type a message…" />
         <button>Send</button>
       </div>
-    `;
-    document.body.appendChild(chatbox);
+    </div>
+  `;
 
-    const input = chatbox.querySelector("input");
-    const button = chatbox.querySelector("button");
-    const messages = chatbox.querySelector("#yuno-messages");
+  class YunoChat extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({ mode: 'open' })
+          .appendChild(template.content.cloneNode(true));
 
-    let hasOpenedChat = false;
-    let chatHistory = [
-      { role: "system", content: "You are Yuno, a friendly assistant helping users on this website." }
-    ];
+      this._bubble  = this.shadowRoot.querySelector('.bubble');
+      this._box     = this.shadowRoot.querySelector('.chatbox');
+      this._msgs    = this.shadowRoot.querySelector('.messages');
+      this._input   = this.shadowRoot.querySelector('input');
+      this._button  = this.shadowRoot.querySelector('button');
+      this._history = [
+        { role: 'system', content: 'You are Yuno, a friendly assistant.' }
+      ];
+    }
 
-    const addMessage = (text, sender) => {
-      const div = document.createElement("div");
-      div.className = `yuno-msg ${sender}`;
-      div.textContent = text;
-      messages.appendChild(div);
-      messages.scrollTop = messages.scrollHeight;
-    };
+    connectedCallback() {
+      this._bubble.addEventListener('click', () => this._toggle());
+      this._button.addEventListener('click', () => this._send());
+      this._input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') this._send();
+      });
+    }
 
-    const addTyping = () => {
-      const div = document.createElement("div");
-      div.className = "yuno-msg bot typing";
-      div.id = "yuno-typing";
-      div.textContent = "Yuno is typing...";
-      messages.appendChild(div);
-    };
+    _toggle() {
+      const open = this._box.style.display === 'flex';
+      this._box.style.display = open ? 'none' : 'flex';
+      if (!open) this._input.focus();
+    }
 
-    const removeTyping = () => {
-      const typing = document.getElementById("yuno-typing");
-      if (typing) typing.remove();
-    };
+    _addMsg(txt, who) {
+      const d = document.createElement('div');
+      d.className = `msg ${who}`;
+      d.textContent = txt;
+      this._msgs.appendChild(d);
+      this._msgs.scrollTop = this._msgs.scrollHeight;
+    }
 
-    // ➜ NEW helper: show Yuno’s follow-up prompt
-//I have commented out the below code because it is breaking the json generation    
-    //const showFollowUp = (promptText) => {
-      //setTimeout(() => {
-        //addMessage(promptText, "yuno");                 // show in UI
-        //chatHistory.push({ role: "assistant", content: promptText }); // log in history
-        //messages.scrollTop = messages.scrollHeight;     // scroll to bottom
-      //}, 1200); // 1.2-second delay feels natural
-    //};
-
-
-    const sendMessage = async () => {
-      const text = input.value.trim();
+    async _send() {
+      const text = this._input.value.trim();
       if (!text) return;
-      addMessage(text, "user");
-      chatHistory.push({ role: "user", content: text });
-      input.value = "";
+      this._addMsg(text, 'user');
+      this._history.push({ role: 'user', content: text });
+      this._input.value = '';
 
-      addTyping();
+      // show typing indicator
+      const tip = document.createElement('div');
+      tip.className = 'msg bot typing';
+      this._msgs.appendChild(tip);
+      this._msgs.scrollTop = this._msgs.scrollHeight;
+
       try {
-        const res = await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+        const res = await fetch('https://luckylabs.pythonanywhere.com/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            messages: chatHistory,
-            site_id,
-            session_id,
-            user_id,
-            page_url: window.location.href
+            site_id:    SITE_ID,
+            session_id: session_id,
+            user_id:    user_id,
+            page_url:   window.location.href,
+            messages:   this._history
           })
         });
-
         const data = await res.json();
-        removeTyping();
-
-        if (data.content) {
-          addMessage(data.content, "yuno");
-          chatHistory.push({ role: "assistant", content: data.content });
-        
-// 🔹 If backend suggests a follow-up, show it.
-//I have commented out the below code because it is breaking the json generation
-         // if (data.follow_up && data.follow_up_prompt) {
-          //  showFollowUp(data.follow_up_prompt);
-          //}
-        } else {
-          addMessage("Hmm, I couldn't find anything useful.", "yuno");
-        }
-
-      } catch (e) {
-        removeTyping();
-        addMessage("Oops! Something went wrong.", "yuno");
-        console.error("Yuno error:", e);
+        tip.remove();
+        this._addMsg(data.content || 'Sorry, I couldn’t find anything.', 'bot');
+        this._history.push({ role: 'assistant', content: data.content });
+      } catch (err) {
+        tip.remove();
+        this._addMsg('Oops, something went wrong.', 'bot');
+        console.error('Yuno Error:', err);
       }
-    };
+    }
+  }
 
-    teaser.onclick = () => {
-      chatbox.style.display = "flex";
-      teaser.style.display = "none";
-      if (!hasOpenedChat) {
-        addMessage("Hi there! 👋 What can I help you with today?", "yuno");
-        chatHistory.push({ role: "assistant", content: "Hi there! 👋 What can I help you with today?" });
-        hasOpenedChat = true;
-      }
-    };
+  customElements.define('yuno-chat', YunoChat);
 
-    bubble.onclick = () => {
-      const isOpen = chatbox.style.display === "flex";
-      chatbox.style.display = isOpen ? "none" : "flex";
-      teaser.style.display = "none";
-      if (!hasOpenedChat && !isOpen) {
-        addMessage("Hi there! 👋 What can I help you with today?", "yuno");
-        chatHistory.push({ role: "assistant", content: "Hi there! 👋 What can I help you with today?" });
-        hasOpenedChat = true;
-      }
-    };
-
-    button.onclick = sendMessage;
-    input.addEventListener("keydown", e => {
-      if (e.key === "Enter") sendMessage();
-    });
-
-    setTimeout(() => {
-      teaser.style.opacity = 0;
-    }, 15000);
+  // ───────── on DOM ready, inject the component ─────────
+  document.addEventListener('DOMContentLoaded', () => {
+    const widget = document.createElement('yuno-chat');
+    document.body.appendChild(widget);
   });
 })();
