@@ -22,7 +22,6 @@
     localStorage.setItem('yuno_user_id', user_id);
   }
 
-  // Template: fixed bubble, teaser, chat panel
   const template = document.createElement('template');
   template.innerHTML = `
     <style>
@@ -74,7 +73,7 @@
         bottom: 90px;
         right: 20px;
         width: 320px;
-        max-height: 420px;
+        height: 420px;
         background: #fff;
         border: 1px solid var(--yuno-accent);
         border-radius: var(--yuno-radius);
@@ -117,7 +116,7 @@
         padding: 12px 18px;
         box-shadow: 0 4px 16px rgba(0,0,0,0.1);
         max-width: 280px;
-        margin: 6px 0;
+        margin: 10px 0;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         color: #333;
       }
@@ -130,17 +129,24 @@
         border-style: solid;
         border-color: #ffffff transparent transparent transparent;
       }
-      .chatbot-bubble.loading::before {
-        content: "";
-        display: block;
-        width: 10px;
-        height: 10px;
+      .chatbot-bubble.loading {
+        background: transparent;
+        box-shadow: none;
+        position: relative;
+        padding: 8px;
+      }
+      .chatbot-bubble.loading .dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        margin: 0 4px;
         background: #777;
         border-radius: 50%;
-        box-shadow: 16px 0 #777, 32px 0 #777;
-        margin: 0 auto;
-        animation: blink 1.2s infinite ease-in-out;
+        animation: blink 1.4s infinite ease-in-out;
       }
+      .chatbot-bubble.loading .dot:nth-child(1) { animation-delay: 0; }
+      .chatbot-bubble.loading .dot:nth-child(2) { animation-delay: 0.2s; }
+      .chatbot-bubble.loading .dot:nth-child(3) { animation-delay: 0.4s; }
       @keyframes blink {
         0%, 80%, 100% { opacity: 0.3; }
         40% { opacity: 1; }
@@ -175,7 +181,7 @@
       }
     </style>
     <div class="bubble">🤝</div>
-    <div class="teaser">🤝 I’m Yuno—how can I help you today?</div>
+    <div class="teaser">🤝 Hi! I’m Yuno—how can I help you today?</div>
     <div class="chatbox">
       <div class="messages"></div>
       <div class="input-row">
@@ -213,7 +219,7 @@
         this._box.style.display = 'flex';
         if (this._first) {
           this._addMsg('🤝 Hi! I’m Yuno—how can I help you today?', 'bot');
-          this._history.push({ role: 'assistant', content: '🤝 Hi! I’m Yuno—how can I help you today?' });
+          this._history.push({ role: 'assistant', content: 'Hi! I’m Yuno—how can I help you today?' });
           this._first = false;
         }
         this._input.focus();
@@ -236,8 +242,13 @@
       this._history.push({ role: 'user', content: text });
       this._input.value = '';
 
+      // show animated typing dots
       const tip = document.createElement('div');
       tip.className = 'msg bot chatbot-bubble loading';
+      for (let i = 0; i < 3; i++) {
+        const dot = document.createElement('span'); dot.className = 'dot';
+        tip.appendChild(dot);
+      }
       this._msgs.appendChild(tip);
       this._msgs.scrollTop = this._msgs.scrollHeight;
 
@@ -245,13 +256,7 @@
         const res = await fetch('https://luckylabs.pythonanywhere.com/ask', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            site_id: SITE_ID,
-            session_id,
-            user_id,
-            page_url: window.location.href,
-            messages: this._history
-          })
+          body: JSON.stringify({ site_id: SITE_ID, session_id, user_id, page_url: window.location.href, messages: this._history })
         });
         const data = await res.json();
         tip.remove();
