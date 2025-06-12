@@ -29,7 +29,8 @@
       :host {
         --radius: 24px;
         --accent: #ef4444; /* red accent */
-        --panel-bg: rgba(255,255,255,0.9);
+        --panel-bg: rgba(255,255,255,0.85);
+        --yuno-bg: rgba(248,250,252,0.95); /* off-white for Yuno messages */
         --blur: blur(12px);
         position: fixed;
         bottom: 20px;
@@ -50,6 +51,11 @@
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         font-size: 14px;
         gap: 8px;
+        transition: all 0.3s ease;
+      }
+      .bubble:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.2);
       }
       .bubble .icon { font-size: 18px; }
 
@@ -63,6 +69,11 @@
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         padding: 4px;
         gap: 8px;
+        animation: slideIn 0.5s ease-out;
+      }
+      @keyframes slideIn {
+        from { transform: translateY(20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
       }
       .teaser .close {
         width: 32px;
@@ -74,6 +85,10 @@
         justify-content: center;
         cursor: pointer;
         font-size: 16px;
+        transition: background 0.2s ease;
+      }
+      .teaser .close:hover {
+        background: #f3f4f6;
       }
       .teaser .input {
         flex: 1;
@@ -91,6 +106,10 @@
         padding: 8px 14px;
         cursor: pointer;
         font-size: 14px;
+        transition: background 0.2s ease;
+      }
+      .teaser .ask-btn:hover {
+        background: #dc2626;
       }
 
       /* Chat panel */
@@ -104,6 +123,7 @@
         border-radius: var(--radius);
         box-shadow: 0 8px 24px rgba(0,0,0,0.2);
         overflow: hidden;
+        animation: slideIn 0.5s ease-out;
       }
       .header {
         display: flex;
@@ -113,6 +133,7 @@
         font-size: 16px;
         font-weight: bold;
         color: #333;
+        background: rgba(255,255,255,0.9);
       }
       .close-btn {
         background: none;
@@ -120,6 +141,10 @@
         font-size: 18px;
         cursor: pointer;
         color: #666;
+        transition: color 0.2s ease;
+      }
+      .close-btn:hover {
+        color: #333;
       }
       .messages {
         flex: 1;
@@ -131,12 +156,13 @@
       }
       .input-row {
         display: flex;
-        border-top: 1px solid #eee;
-        background: var(--panel-bg);
+        border-top: 1px solid rgba(238,238,238,0.8);
+        background: rgba(255,255,255,0.9);
       }
       .input-row input {
         flex: 1;
-        border: none;\n        padding: 10px;
+        border: none;
+        padding: 10px;
         font-size: 14px;
         outline: none;
         background: transparent;
@@ -148,6 +174,10 @@
         padding: 0 16px;
         cursor: pointer;
         font-size: 14px;
+        transition: background 0.2s ease;
+      }
+      .input-row button:hover {
+        background: #dc2626;
       }
 
       .chatbot-bubble {
@@ -157,11 +187,13 @@
         max-width: 75%;
         line-height: 1.4;
         font-size: 14px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
       }
       .msg.bot .chatbot-bubble {
-        background: #fff;
+        background: var(--yuno-bg);
         color: #333;
         align-self: flex-start;
+        border: 1px solid rgba(229,231,235,0.8);
       }
       .msg.bot .chatbot-bubble::after {
         content: '';
@@ -170,25 +202,60 @@
         left: 16px;
         border-width: 8px 8px 0 8px;
         border-style: solid;
-        border-color: #fff transparent transparent transparent;
+        border-color: var(--yuno-bg) transparent transparent transparent;
       }
       .msg.user .chatbot-bubble {
         background: var(--accent);
         color: #fff;
         align-self: flex-end;
       }
+      .msg.user .chatbot-bubble::after {
+        content: '';
+        position: absolute;
+        bottom: -8px;
+        right: 16px;
+        border-width: 8px 8px 0 8px;
+        border-style: solid;
+        border-color: var(--accent) transparent transparent transparent;
+      }
+      
+      /* Enhanced typing indicator */
       .typing {
         display: inline-flex;
         gap: 4px;
+        align-items: center;
+      }
+      .typing::before {
+        content: '💭';
+        font-size: 16px;
+        margin-right: 6px;
+        animation: pulse 1.5s infinite ease-in-out;
       }
       .typing .dot {
-        width: 8px;
-        height: 8px;
-        background: #777;
+        width: 6px;
+        height: 6px;
+        background: linear-gradient(45deg, #ef4444, #f97316);
         border-radius: 50%;
-        animation: blink 1.4s infinite ease-in-out;
+        animation: bounce 0.8s infinite ease-in-out;
       }
-      @keyframes blink { 0%,80%,100% { opacity:0.3;} 40%{opacity:1;} }
+      .typing .dot:nth-child(2) { animation-delay: 0.1s; }
+      .typing .dot:nth-child(3) { animation-delay: 0.2s; }
+      .typing .dot:nth-child(4) { animation-delay: 0.3s; }
+      
+      @keyframes bounce {
+        0%, 80%, 100% { 
+          transform: scale(0.8);
+          opacity: 0.5;
+        }
+        40% { 
+          transform: scale(1.2);
+          opacity: 1;
+        }
+      }
+      @keyframes pulse {
+        0%, 100% { opacity: 0.7; }
+        50% { opacity: 1; }
+      }
     </style>
 
     <div class="bubble"><span class="icon">💬</span><span>Ask Yuno</span></div>
@@ -223,10 +290,18 @@
       this._sendBtn = root.querySelector('.input-row button');
       this._history = [{ role: 'system', content: 'You are Yuno, a friendly assistant.' }];
       this._first = true;
+      this._teaserShown = false;
     }
 
     connectedCallback() {
-      this._bubble.addEventListener('click', () => this._showTeaser());
+      // Auto-show teaser after 1 second
+      setTimeout(() => {
+        if (!this._teaserShown) {
+          this._showTeaser();
+        }
+      }, 1000);
+
+      this._bubble.addEventListener('click', () => this._openChat());
       this._closeTeaser.addEventListener('click', () => this._hideTeaser());
       this._askTeaser.addEventListener('click', () => this._openChat());
       this._closeBox.addEventListener('click', () => this._toggleChat(false));
@@ -235,25 +310,37 @@
     }
 
     _showTeaser() {
-      this._bubble.style.display = 'none';
-      this._teaser.style.display = 'inline-flex';
+      if (!this._teaserShown) {
+        this._bubble.style.display = 'none';
+        this._teaser.style.display = 'inline-flex';
+        this._teaserShown = true;
+      }
     }
+    
     _hideTeaser() {
       this._teaser.style.display = 'none';
       this._bubble.style.display = 'inline-flex';
+      this._teaserShown = false;
     }
+    
     _openChat() {
       this._teaser.style.display = 'none';
+      this._bubble.style.display = 'none';
       this._toggleChat(true);
     }
+    
     _toggleChat(open) {
-      this._bubble.style.display = open ? 'none' : 'inline-flex';
       this._box.style.display = open ? 'flex' : 'none';
+      if (!open) {
+        this._bubble.style.display = 'inline-flex';
+      }
       if (open && this._first) {
-        this._addBotMessage('Hi! I’m Yuno—how can I help you today?');
+        this._addBotMessage('Hi! I'm Yuno—how can I help you today?');
         this._first = false;
       }
-      this._input.focus();
+      if (open) {
+        this._input.focus();
+      }
     }
 
     _addBotMessage(text) {
@@ -280,15 +367,39 @@
       const text = this._input.value.trim(); if (!text) return;
       this._addUserMessage(text);
       this._input.value = '';
-      // typing indicator
+      
+      // Enhanced typing indicator
       const tip = document.createElement('div'); tip.className = 'msg bot';
       const typing = document.createElement('div'); typing.className = 'chatbot-bubble typing';
-      for (let i=0;i<3;i++){ const dot=document.createElement('span'); dot.className='dot'; typing.appendChild(dot);} 
-      tip.appendChild(typing); this._msgs.appendChild(tip); this._msgs.scrollTop=this._msgs.scrollHeight;
+      for (let i=0;i<4;i++){ 
+        const dot=document.createElement('span'); 
+        dot.className='dot'; 
+        typing.appendChild(dot);
+      } 
+      tip.appendChild(typing); 
+      this._msgs.appendChild(tip); 
+      this._msgs.scrollTop=this._msgs.scrollHeight;
+      
       try {
-        const res = await fetch('https://luckylabs.pythonanywhere.com/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ site_id:SITE_ID, session_id, user_id, page_url:window.location.href, messages:this._history })});
-        const data = await res.json(); tip.remove(); this._addBotMessage(data.content||'Sorry, I couldn’t find anything.');
-      } catch(err){ tip.remove(); this._addBotMessage('Oops, something went wrong.'); console.error('Yuno Error:',err); }
+        const res = await fetch('https://luckylabs.pythonanywhere.com/ask',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({ 
+            site_id:SITE_ID, 
+            session_id, 
+            user_id, 
+            page_url:window.location.href, 
+            messages:this._history 
+          })
+        });
+        const data = await res.json(); 
+        tip.remove(); 
+        this._addBotMessage(data.content||'Sorry, I couldn't find anything.');
+      } catch(err){ 
+        tip.remove(); 
+        this._addBotMessage('Oops, something went wrong.'); 
+        console.error('Yuno Error:',err); 
+      }
     }
   }
 
