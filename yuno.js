@@ -175,8 +175,8 @@
       chatbox.style.display = "flex";
       teaser.style.display = "none";
       if (!hasOpenedChat) {
-        addMessage("Hey! Need help with shipping or anything?", "yuno");
-        chatHistory.push({ role: "assistant", content: "Hey! Need help with shipping or anything?" });
+        addMessage("Hi there! 👋 What can I help you with today?", "yuno");
+        chatHistory.push({ role: "assistant", content: "Hi there! 👋 What can I help you with today?" });
         hasOpenedChat = true;
       }
     };
@@ -186,8 +186,8 @@
       chatbox.style.display = isOpen ? "none" : "flex";
       teaser.style.display = "none";
       if (!hasOpenedChat && !isOpen) {
-        addMessage("Hey! Need help with shipping or anything?", "yuno");
-        chatHistory.push({ role: "assistant", content: "Hey! Need help with shipping or anything?" });
+        addMessage("Hi there! 👋 What can I help you with today?", "yuno");
+        chatHistory.push({ role: "assistant", content: "Hi there! 👋 What can I help you with today?" });
         hasOpenedChat = true;
       }
     };
