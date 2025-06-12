@@ -22,19 +22,25 @@
     localStorage.setItem('yuno_user_id', user_id);
   }
 
-  // Template: fixed bubble, teaser, chat panel with auto-expanding height
+  // Template: fixed bubble + glassmorphic chat panel
   const template = document.createElement('template');
   template.innerHTML = `
     <style>
       :host {
-        --yuno-radius: 12px;
-        --yuno-font: 'Segoe UI', sans-serif;
-        --yuno-accent: #22d3ee;
+        --radius: 12px;
+        --accent: #4F46E5;
+        --gradient: linear-gradient(
+          135deg,
+          #A0D8F1 0%,
+          #D3A8F9 40%,
+          #FAC8D8 70%,
+          #73E5B7 100%
+        );
         position: fixed;
         bottom: 0;
         right: 0;
-        font-family: var(--yuno-font);
         z-index: 9999;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       }
       .bubble {
         position: fixed;
@@ -42,32 +48,36 @@
         right: 20px;
         width: 60px;
         height: 60px;
-        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 50%, #a18cd1 75%, #fbc2eb 100%);
-        backdrop-filter: blur(10px);
-        border: 2px solid var(--yuno-accent);
+        background: var(--gradient);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 28px;
         cursor: pointer;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.15);
         animation: pulse 2s infinite ease-in-out;
       }
+      .bubble .icon {
+        font-size: 24px;
+        color: #fff;
+      }
       @keyframes pulse {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.1); }
+        0%,100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
       }
       .teaser {
         position: fixed;
         bottom: 90px;
         right: 20px;
-        background: #fff;
-        border: 1px solid var(--yuno-accent);
-        border-radius: var(--yuno-radius);
-        padding: 8px 12px;
+        background: rgba(255,255,255,0.9);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.4);
+        border-radius: var(--radius);
+        padding: 10px 14px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         font-size: 14px;
         color: #111;
+        display: none;
       }
       .chatbox {
         position: fixed;
@@ -75,13 +85,32 @@
         right: 20px;
         width: 320px;
         max-height: 420px;
-        background: #fff;
-        border: 1px solid var(--yuno-accent);
-        border-radius: var(--yuno-radius);
+        background: rgba(255,255,255,0.85);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.4);
+        border-radius: var(--radius);
         box-shadow: 0 8px 24px rgba(0,0,0,0.2);
         display: none;
         flex-direction: column;
         overflow: hidden;
+      }
+      .header {
+        height: 40px;
+        background: transparent;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 12px;
+        font-size: 16px;
+        font-weight: bold;
+        color: #333;
+      }
+      .close-btn {
+        background: none;
+        border: none;
+        font-size: 20px;
+        cursor: pointer;
+        color: #666;
       }
       .messages {
         padding: 12px;
@@ -89,11 +118,12 @@
         overflow-y: auto;
         display: flex;
         flex-direction: column;
-        justify-content: flex-end;
+        gap: 8px;
       }
       .input-row {
         display: flex;
         border-top: 1px solid #eee;
+        background: rgba(255,255,255,0.9);
       }
       .input-row input {
         flex: 1;
@@ -104,7 +134,7 @@
         background: transparent;
       }
       .input-row button {
-        background: #4f46e5;
+        background: var(--accent);
         color: #fff;
         border: none;
         padding: 0 16px;
@@ -112,77 +142,60 @@
       }
       .chatbot-bubble {
         position: relative;
-        display: inline-block;
-        background: #ffffff;
-        border-radius: 24px;
-        padding: 12px 18px;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-        max-width: 280px;
-        margin: 10px 0;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        max-width: 80%;
+        padding: 10px 14px;
+        border-radius: var(--radius);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        font-size: 14px;
+        line-height: 1.4;
+      }
+      .msg.bot .chatbot-bubble {
+        align-self: flex-start;
+        background: #fff;
         color: #333;
       }
-      /* Bot tail only */
-      .msg.bot.chatbot-bubble::after {
-        content: "";
+      .msg.bot .chatbot-bubble::after {
+        content: '';
         position: absolute;
         bottom: -8px;
-        left: 24px;
+        left: 16px;
         border-width: 8px 8px 0 8px;
         border-style: solid;
-        border-color: #ffffff transparent transparent transparent;
+        border-color: #fff transparent transparent transparent;
       }
-      .chatbot-bubble.loading {
-        background: transparent;
-        box-shadow: none;
-        padding: 8px;
+      .msg.user .chatbot-bubble {
+        align-self: flex-end;
+        background: var(--accent);
+        color: #fff;
       }
-      .chatbot-bubble.loading .dot {
-        display: inline-block;
+      .typing {
+        display: inline-flex;
+        gap: 4px;
+      }
+      .typing .dot {
         width: 8px;
         height: 8px;
-        margin: 0 4px;
         background: #777;
         border-radius: 50%;
         animation: blink 1.4s infinite ease-in-out;
       }
-      .chatbot-bubble.loading .dot:nth-child(1) { animation-delay: 0; }
-      .chatbot-bubble.loading .dot:nth-child(2) { animation-delay: 0.2s; }
-      .chatbot-bubble.loading .dot:nth-child(3) { animation-delay: 0.4s; }
-      @keyframes blink {
-        0%, 80%, 100% { opacity: 0.3; }
-        40% { opacity: 1; }
-      }
-      /* Labels */
-      .msg.bot.chatbot-bubble::before {
-        content: "Yuno";
-        display: block;
-        font-size: 10px;
-        margin-bottom: 4px;
-        color: var(--yuno-accent);
-      }
-      .msg.user.chatbot-bubble::before {
-        content: "You";
-        display: block;
-        font-size: 10px;
-        margin-bottom: 4px;
-        text-align: right;
-        color: var(--yuno-accent);
-      }
-      /* Simple user bubble, no tail */
-      .msg.user.chatbot-bubble {
-        background: #4f46e5;
-        color: #fff;
-        border-radius: 24px;
-      }
+      .typing .dot:nth-child(1) { animation-delay: 0; }
+      .typing .dot:nth-child(2) { animation-delay: 0.2s; }
+      .typing .dot:nth-child(3) { animation-delay: 0.4s; }
+      @keyframes blink { 0%,80%,100% { opacity: 0.3; } 40% { opacity: 1; } }
     </style>
-    <div class="bubble">🤝</div>
-    <div class="teaser">🤝 Hi! I’m Yuno—how can I help you today?</div>
+
+    <div class="bubble"><span class="icon">💬</span></div>
+    <div class="teaser">💬 Hi! I’m Yuno—how can I help you today?</div>
     <div class="chatbox">
+      <div class="header">
+        Chat with Yuno
+        <button class="close-btn">×</button>
+      </div>
       <div class="messages"></div>
       <div class="input-row">
-        <input type="text" placeholder="Type a message…" />
-        <button>Send</button>
+        <input type="text" placeholder="Type your message…" aria-label="Type your message" />
+        <button aria-label="Send message">Send</button>
       </div>
     </div>
   `;
@@ -191,18 +204,20 @@
     constructor() {
       super();
       this.attachShadow({ mode: 'open' }).appendChild(template.content.cloneNode(true));
-      this._bubble = this.shadowRoot.querySelector('.bubble');
-      this._teaser = this.shadowRoot.querySelector('.teaser');
-      this._box = this.shadowRoot.querySelector('.chatbox');
-      this._msgs = this.shadowRoot.querySelector('.messages');
-      this._input = this.shadowRoot.querySelector('input');
-      this._button = this.shadowRoot.querySelector('button');
-      this._history = [{ role: 'system', content: 'You are Yuno, a friendly assistant.' }];
-      this._first = true;
+      this._bubble    = this.shadowRoot.querySelector('.bubble');
+      this._teaser    = this.shadowRoot.querySelector('.teaser');
+      this._box       = this.shadowRoot.querySelector('.chatbox');
+      this._msgs      = this.shadowRoot.querySelector('.messages');
+      this._input     = this.shadowRoot.querySelector('input');
+      this._button    = this.shadowRoot.querySelector('button[aria-label="Send message"]');
+      this._closeBtn  = this.shadowRoot.querySelector('.close-btn');
+      this._history   = [{ role: 'system', content: 'You are Yuno, a friendly assistant.' }];
+      this._first     = true;
     }
 
     connectedCallback() {
       this._bubble.addEventListener('click', () => this._toggle());
+      this._closeBtn.addEventListener('click', () => this._toggle());
       this._button.addEventListener('click', () => this._send());
       this._input.addEventListener('keydown', e => e.key === 'Enter' && this._send());
     }
@@ -211,40 +226,59 @@
       const open = this._box.style.display === 'flex';
       if (open) {
         this._box.style.display = 'none';
+        this._bubble.style.display = 'flex';
       } else {
+        this._bubble.style.display = 'none';
+        this._teaser.style.display = 'none';
         this._box.style.display = 'flex';
         if (this._first) {
-          this._addMsg('🤝 Hi! I’m Yuno—how can I help you today?', 'bot');
-          this._history.push({ role: 'assistant', content: '🤝 Hi! I’m Yuno—how can I help you today?' });
+          this._addBotMessage('Hi! I’m Yuno—how can I help you today?');
           this._first = false;
         }
         this._input.focus();
       }
-      this._teaser.style.display = 'none';
     }
 
-    _addMsg(text, who) {
-      const div = document.createElement('div');
-      div.className = `msg ${who} chatbot-bubble`;
-      div.textContent = text;
-      this._msgs.appendChild(div);
+    _addBotMessage(text) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'msg bot';
+      const bubble = document.createElement('div');
+      bubble.className = 'chatbot-bubble';
+      bubble.textContent = text;
+      wrapper.appendChild(bubble);
+      this._msgs.appendChild(wrapper);
       this._msgs.scrollTop = this._msgs.scrollHeight;
+      this._history.push({ role: 'assistant', content: text });
+    }
+
+    _addUserMessage(text) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'msg user';
+      const bubble = document.createElement('div');
+      bubble.className = 'chatbot-bubble';
+      bubble.textContent = text;
+      wrapper.appendChild(bubble);
+      this._msgs.appendChild(wrapper);
+      this._msgs.scrollTop = this._msgs.scrollHeight;
+      this._history.push({ role: 'user', content: text });
     }
 
     async _send() {
       const text = this._input.value.trim();
       if (!text) return;
-      this._addMsg(text, 'user');
-      this._history.push({ role: 'user', content: text });
+      this._addUserMessage(text);
       this._input.value = '';
 
-      // show animated typing dots
+      // typing indicator
       const tip = document.createElement('div');
-      tip.className = 'msg bot chatbot-bubble loading';
+      tip.className = 'msg bot';
+      const typingBubble = document.createElement('div');
+      typingBubble.className = 'chatbot-bubble typing';
       for (let i = 0; i < 3; i++) {
         const dot = document.createElement('span'); dot.className = 'dot';
-        tip.appendChild(dot);
+        typingBubble.appendChild(dot);
       }
+      tip.appendChild(typingBubble);
       this._msgs.appendChild(tip);
       this._msgs.scrollTop = this._msgs.scrollHeight;
 
@@ -256,11 +290,10 @@
         });
         const data = await res.json();
         tip.remove();
-        this._addMsg(data.content || 'Sorry, I couldn’t find anything.', 'bot');
-        this._history.push({ role: 'assistant', content: data.content });
+        this._addBotMessage(data.content || 'Sorry, I couldn’t find anything.');
       } catch (err) {
         tip.remove();
-        this._addMsg('Oops, something went wrong.', 'bot');
+        this._addBotMessage('Oops, something went wrong.');
         console.error('Yuno Error:', err);
       }
     }
