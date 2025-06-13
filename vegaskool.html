@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VegaEducation — Home Replica</title>
+  <style>
+    /* Reset & Base */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; color: #333; line-height: 1.6; background: #f9f9f9; }
+    a { text-decoration: none; color: inherit; }
+    img { max-width: 100%; display: block; }
+    .container { width: 90%; max-width: 1200px; margin: 0 auto; }
+
+    /* Header */
+    header { background: #0056b3; padding: 20px 0; }
+    nav { display: flex; align-items: center; justify-content: space-between; }
+    .logo { font-size: 1.5rem; font-weight: bold; color: #fff; }
+    .nav-links { list-style: none; display: flex; }
+    .nav-links li { margin-left: 20px; }
+    .nav-links a { color: #fff; font-weight: 600; }
+    .btn-signin { background: #ff6600; color: #fff; padding: 8px 16px; border-radius: 4px; }
+
+    /* Hero */
+    .hero { background: #007bff; color: #fff; text-align: center; padding: 100px 0; }
+    .hero h1 { font-size: 3rem; margin-bottom: 20px; }
+    .hero p { font-size: 1.2rem; margin-bottom: 30px; }
+    .btn-primary { background: #ff6600; color: #fff; padding: 12px 24px; border: none; border-radius: 4px; font-size: 1rem; cursor: pointer; }
+
+    /* Stats */
+    .stats { background: #fff; padding: 60px 0; text-align: center; }
+    .stats .stat { display: inline-block; width: 30%; margin: 0 1%; }
+    .stats .stat h2 { font-size: 2.5rem; color: #0056b3; margin-bottom: 8px; }
+    .stats .stat p { font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; color: #777; }
+
+    /* About */
+    .about { display: flex; align-items: center; gap: 40px; padding: 60px 0; }
+    .about img { border-radius: 8px; width: 50%; }
+    .about .about-text { width: 50%; }
+    .about .about-text h2 { font-size: 2rem; margin-bottom: 20px; }
+    .about .about-text p { margin-bottom: 20px; }
+
+    /* Courses */
+    .courses { padding: 60px 0; }
+    .courses .course-list { display: flex; gap: 20px; flex-wrap: wrap; }
+    .course-card { background: #fff; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; width: calc(50% - 10px); }
+    .course-card img { width: 100%; height: auto; }
+    .course-card .content { padding: 20px; }
+    .course-card h3 { font-size: 1.5rem; margin-bottom: 10px; color: #0056b3; }
+    .course-card p { margin-bottom: 15px; }
+    .course-card .btn-details { background: #0056b3; color: #fff; padding: 8px 16px; border: none; border-radius: 4px; font-size: 0.9rem; cursor: pointer; }
+
+    /* Programs & Features */
+    .programs, .features { background: #fff; padding: 60px 0; }
+    .programs h2, .features h2 { text-align: center; font-size: 2rem; margin-bottom: 40px; color: #0056b3; }
+    .programs .grid, .features .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+    .programs .item, .features .item { background: #f1f1f1; padding: 20px; border-radius: 8px; }
+    .programs .item h4, .features .item h4 { margin-bottom: 10px; }
+
+    /* FAQ */
+    .faq { padding: 60px 0; }
+    .faq h2 { text-align: center; font-size: 2rem; margin-bottom: 40px; color: #0056b3; }
+    .faq .qa { max-width: 800px; margin: 0 auto 20px; }
+    .faq .qa h4 { font-size: 1.1rem; margin-bottom: 8px; font-weight: 600; }
+    .faq .qa p { margin-left: 20px; }
+
+    /* Footer */
+    footer { background: #333; color: #ccc; padding: 40px 0; }
+    footer .footer-content { display: flex; flex-wrap: wrap; gap: 20px; }
+    footer .footer-content div { flex: 1; min-width: 200px; }
+    footer a { color: #ccc; }
+    footer .social-icons a { margin-right: 10px; font-size: 1.2rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <nav>
+        <div class="logo">VegaEducation</div>
+        <ul class="nav-links">
+          <li><a href="#courses">Courses</a></li>
+          <li><a href="#registration">Registration Form</a></li>
+          <li><a class="btn-signin" href="#signin">Sign In</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="container">
+      <h1>VegaEducation</h1>
+      <p>Register for 2 Months Summer Program!</p>
+      <button class="btn-primary">Explore Us</button>
+    </div>
+  </section>
+
+  <section class="stats">
+    <div class="container">
+      <div class="stat"><h2>50+</h2><p>Projects</p></div>
+      <div class="stat"><h2>1000+</h2><p>Students</p></div>
+      <div class="stat"><h2>95%</h2><p>Retention</p></div>
+    </div>
+  </section>
+
+  <section class="about container">
+    <img src="https://vegaskool.com/web/image/website.s_text_image_default_image" alt="Graduates tossing caps">
+    <div class="about-text">
+      <h2>About Us</h2>
+      <p>VegaEducation is at the forefront of robotics and AI innovation, dedicated to bridging theoretical learning with practical industry applications. We specialize in intelligent robotic systems, machine vision integration, and industrial automation solutions.</p>
+    </div>
+  </section>
+
+  <section id="courses" class="courses container">
+    <h2>Summer Programs - 2 Months</h2>
+    <div class="course-list">
+      <div class="course-card">
+        <img src="https://vegaskool.com/web/image/3621-60d731b0/6.8%20render%2010.webp" alt="Advanced Robotics">
+        <div class="content">
+          <h3>Advanced Robotics</h3>
+          <p>A comprehensive course designed for University and College students, covering cutting-edge robotics concepts, kinematics, dynamics, AI-driven automation, and real-world applications.</p>
+          <button class="btn-details">More Details</button>
+        </div>
+      </div>
+      <div class="course-card">
+        <img src="https://vegaskool.com/web/image/3622-0c255704/6.8-2.webp" alt="Basics of Robotics">
+        <div class="content">
+          <h3>Basics of Robotics</h3>
+          <p>An introductory course designed for students in Grades 9 to 12. It covers fundamental robotics concepts, including mechanical design, sensors, motors, and basic programming.</p>
+          <button class="btn-details">More Details</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="programs container">
+    <h2>Our Programs & Offering</h2>
+    <div class="grid">
+      <div class="item">
+        <h4>Comprehensive Workshops & In-Depth Training Programs</h4>
+        <p>Hands-on robotics workshops, bridging academia and industry by equipping students with real-world skills over 2 to 3 months.</p>
+      </div>
+      <div class="item">
+        <h4>Value-Added Courses, Placement and Training Programs</h4>
+        <p>Specialized courses available for university credit, focusing on building advanced skills and enhancing employability.</p>
+      </div>
+      <div class="item">
+        <h4>Year-Long Semester Courses</h4>
+        <p>Credit-based programs providing hands-on training in robotics, AI, and automation, aligned with university curricula.</p>
+      </div>
+      <div class="item">
+        <h4>Faculty Training Program</h4>
+        <p>3 to 6-day training program on robotics, equipping educators with essential skills and teaching strategies.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="features container">
+    <h2>What Makes Us Different?</h2>
+    <div class="grid">
+      <div class="item"><h4>Definition, History, and Applications of Robotics</h4></div>
+      <div class="item"><h4>Hands-on Projects: Pick-and-Place</h4></div>
+      <div class="item"><h4>Basic Concepts in Robotics</h4></div>
+      <div class="item"><h4>Sensors, Actuators, and Controllers</h4></div>
+      <div class="item"><h4>Motion Planning of Manipulators</h4></div>
+      <div class="item"><h4>Robot Programming & ROS</h4></div>
+    </div>
+  </section>
+
+  <section class="faq container">
+    <h2>Frequently Asked Questions</h2>
+    <div class="qa"><h4>What is VegaEducation?</h4><p>VegaEducation offers specialized workshops, training, and value-added courses focused on career growth and skill development.</p></div>
+    <div class="qa"><h4>Are the courses beginner-friendly?</h4><p>Yes, our courses cater to all skill levels. Each course description includes recommended prerequisites, if any.</p></div>
+    <div class="qa"><h4>Is there a certification provided?</h4><p>We currently do not provide certifications for our courses; in the future, we are planning to offer certificates.</p></div>
+    <div class="qa"><h4>Can I access course material after the workshop?</h4><p>Yes, most of our courses provide access to materials for a limited time after completion.</p></div>
+  </section>
+
+  <footer>
+    <div class="container footer-content">
+      <div>
+        <h4>Contact Us</h4>
+        <p>+91 6295-705927<br>debdatta.s@orangewood.co</p>
+      </div>
+      <div>
+        <h4>Address</h4>
+        <p>Second Floor, A-48, Sector-67<br>Noida, Gautam Buddha Nagar<br>Uttar Pradesh, 201301</p>
+      </div>
+      <div>
+        <h4>Legal</h4>
+        <p><a href="#">Privacy Policy</a> | <a href="#">Terms and Conditions</a></p>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
