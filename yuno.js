@@ -1,3 +1,4 @@
+// yuno.js
 'use strict';
 
 (() => {
@@ -5,6 +6,7 @@
   const allScripts = Array.from(document.getElementsByTagName('script'));
   const thisScript = allScripts.find(s => s.src && s.src.includes(SCRIPT_NAME));
   const SITE_ID = thisScript?.getAttribute('site_id') || 'default_site';
+  const WIDGET_THEME = thisScript?.getAttribute('theme') || 'dark';
 
   // Session & user persistence
   const now = Date.now();
@@ -26,19 +28,53 @@
   const template = document.createElement('template');
   template.innerHTML = `
     <style>
+      /* common host styles */
       :host {
-        --radius: 24px;
-        --accent: #ef4444; /* red accent */
-        --panel-bg: rgba(255,255,255,0.85);
-        --yuno-bg: rgba(248,250,252,0.95); /* off-white for Yuno messages */
-        --blur: blur(12px);
         position: fixed;
         bottom: 20px;
         right: 20px;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         z-index: 9999;
+        --radius: 24px;
       }
-      /* Trigger pill: Ask Yuno */
+
+      /* dark theme variables */
+      :host([theme="dark"]) {
+        --accent: linear-gradient(to right, #2563eb, #06b6d4);
+        --accent-hover: linear-gradient(to right, #1d4ed8, #0891b2);
+        --panel-bg: rgba(31, 41, 55, 0.8);
+        --yuno-bg: #1f2937;
+        --blur: blur(20px);
+        --border-color: rgba(75, 85, 99, 0.3);
+        --border-hover-color: rgba(107, 114, 128, 0.5);
+        --text-color: #e5e7eb;
+        --text-muted: #9ca3af;
+        --header-bg: rgba(31, 41, 55, 0.9);
+        --close-bg: rgba(31,41,55,0.8);
+        --close-color: #9ca3af;
+        --close-hover-bg: rgba(31,41,55,0.9);
+        --close-hover-color: #e5e7eb;
+      }
+
+      /* light theme variables */
+      :host([theme="light"]) {
+        --accent: linear-gradient(to right, #2563eb, #06b6d4);
+        --accent-hover: linear-gradient(to right, #1d4ed8, #0891b2);
+        --panel-bg: rgba(255, 255, 255, 0.85);
+        --yuno-bg: rgba(248, 250, 252, 0.95);
+        --blur: blur(12px);
+        --border-color: rgba(238, 238, 238, 0.8);
+        --border-hover-color: rgba(147, 51, 234, 0.3);
+        --text-color: #1e293b;
+        --text-muted: #64748b;
+        --header-bg: rgba(255,255,255,0.9);
+        --close-bg: #fff;
+        --close-color: #666;
+        --close-hover-bg: #f3f4f6;
+        --close-hover-color: #333;
+      }
+
+      /* Trigger pill */
       .bubble {
         display: inline-flex;
         align-items: center;
@@ -78,25 +114,27 @@
       .teaser .close {
         width: 32px;
         height: 32px;
-        background: #fff;
+        background: var(--close-bg);
+        color: var(--close-color);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
         font-size: 16px;
-        transition: background 0.2s ease;
+        transition: background 0.2s ease, color 0.2s ease;
       }
       .teaser .close:hover {
-        background: #f3f4f6;
+        background: var(--close-hover-bg);
+        color: var(--close-hover-color);
       }
       .teaser .input {
         flex: 1;
-        background: #fff;
+        background: var(--yuno-bg);
         border-radius: var(--radius);
         padding: 8px 12px;
         font-size: 14px;
-        color: #333;
+        color: var(--text-color);
       }
       .teaser .ask-btn {
         background: var(--accent);
@@ -109,7 +147,7 @@
         transition: background 0.2s ease;
       }
       .teaser .ask-btn:hover {
-        background: #dc2626;
+        background: var(--accent-hover);
       }
 
       /* Chat panel */
@@ -132,19 +170,19 @@
         padding: 12px;
         font-size: 16px;
         font-weight: bold;
-        color: #333;
-        background: rgba(255,255,255,0.9);
+        color: var(--text-color);
+        background: var(--header-bg);
       }
       .close-btn {
         background: none;
         border: none;
         font-size: 18px;
         cursor: pointer;
-        color: #666;
+        color: var(--close-color);
         transition: color 0.2s ease;
       }
       .close-btn:hover {
-        color: #333;
+        color: var(--close-hover-color);
       }
       .messages {
         flex: 1;
@@ -156,8 +194,8 @@
       }
       .input-row {
         display: flex;
-        border-top: 1px solid rgba(238,238,238,0.8);
-        background: rgba(255,255,255,0.9);
+        border-top: 1px solid var(--border-color);
+        background: var(--header-bg);
       }
       .input-row input {
         flex: 1;
@@ -166,6 +204,7 @@
         font-size: 14px;
         outline: none;
         background: transparent;
+        color: var(--text-color);
       }
       .input-row button {
         background: var(--accent);
@@ -177,9 +216,10 @@
         transition: background 0.2s ease;
       }
       .input-row button:hover {
-        background: #dc2626;
+        background: var(--accent-hover);
       }
 
+      /* Bot & User bubbles */
       .chatbot-bubble {
         position: relative;
         padding: 10px 14px;
@@ -191,9 +231,9 @@
       }
       .msg.bot .chatbot-bubble {
         background: var(--yuno-bg);
-        color: #333;
+        color: var(--text-color);
         align-self: flex-start;
-        border: 1px solid rgba(229,231,235,0.8);
+        border: 1px solid var(--border-color);
       }
       .msg.bot .chatbot-bubble::after {
         content: '';
@@ -218,8 +258,8 @@
         border-style: solid;
         border-color: var(--accent) transparent transparent transparent;
       }
-      
-      /* Enhanced typing indicator */
+
+      /* Typing indicator */
       .typing {
         display: inline-flex;
         gap: 4px;
@@ -234,14 +274,14 @@
       .typing .dot {
         width: 6px;
         height: 6px;
-        background: linear-gradient(45deg, #ef4444, #f97316);
+        background: var(--accent);
         border-radius: 50%;
         animation: bounce 0.8s infinite ease-in-out;
       }
       .typing .dot:nth-child(2) { animation-delay: 0.1s; }
       .typing .dot:nth-child(3) { animation-delay: 0.2s; }
       .typing .dot:nth-child(4) { animation-delay: 0.3s; }
-      
+
       @keyframes bounce {
         0%, 80%, 100% { 
           transform: scale(0.8);
@@ -275,6 +315,11 @@
   `;
 
   class YunoChat extends HTMLElement {
+    static get observedAttributes() { return ['theme']; }
+    attributeChangedCallback(name, oldValue, newValue) {
+      // CSS handles theme switching automatically
+    }
+
     constructor() {
       super();
       const root = this.attachShadow({ mode: 'open' });
@@ -294,10 +339,17 @@
     }
 
     connectedCallback() {
+      // apply initial theme
+      if (!this.hasAttribute('theme')) {
+        this.setAttribute('theme', WIDGET_THEME);
+      }
+
       // Auto-show teaser after 1 second
       setTimeout(() => {
         if (!this._teaserShown) {
-          this._showTeaser();
+          this._bubble.style.display = 'none';
+          this._teaser.style.display = 'inline-flex';
+          this._teaserShown = true;
         }
       }, 1000);
 
@@ -309,38 +361,26 @@
       this._input.addEventListener('keydown', e => e.key === 'Enter' && this._send());
     }
 
-    _showTeaser() {
-      if (!this._teaserShown) {
-        this._bubble.style.display = 'none';
-        this._teaser.style.display = 'inline-flex';
-        this._teaserShown = true;
-      }
-    }
-    
-    _hideTeaser() {
-      this._teaser.style.display = 'none';
-      this._bubble.style.display = 'inline-flex';
-      this._teaserShown = false;
-    }
-    
     _openChat() {
       this._teaser.style.display = 'none';
       this._bubble.style.display = 'none';
       this._toggleChat(true);
     }
-    
+
+    _hideTeaser() {
+      this._teaser.style.display = 'none';
+      this._bubble.style.display = 'inline-flex';
+      this._teaserShown = false;
+    }
+
     _toggleChat(open) {
       this._box.style.display = open ? 'flex' : 'none';
-      if (!open) {
-        this._bubble.style.display = 'inline-flex';
-      }
+      if (!open) this._bubble.style.display = 'inline-flex';
       if (open && this._first) {
-        this._addBotMessage('Hi! I\'m Yuno—how can I help you today?');
+        this._addBotMessage("Hi! I'm Yuno—how can I help you today?");
         this._first = false;
       }
-      if (open) {
-        this._input.focus();
-      }
+      if (open) this._input.focus();
     }
 
     _addBotMessage(text) {
@@ -364,41 +404,41 @@
     }
 
     async _send() {
-      const text = this._input.value.trim(); if (!text) return;
+      const text = this._input.value.trim();
+      if (!text) return;
       this._addUserMessage(text);
       this._input.value = '';
-      
-      // Enhanced typing indicator
+
       const tip = document.createElement('div'); tip.className = 'msg bot';
       const typing = document.createElement('div'); typing.className = 'chatbot-bubble typing';
-      for (let i=0;i<4;i++){ 
-        const dot=document.createElement('span'); 
-        dot.className='dot'; 
+      for (let i = 0; i < 4; i++) {
+        const dot = document.createElement('span');
+        dot.className = 'dot';
         typing.appendChild(dot);
-      } 
-      tip.appendChild(typing); 
-      this._msgs.appendChild(tip); 
-      this._msgs.scrollTop=this._msgs.scrollHeight;
-      
+      }
+      tip.appendChild(typing);
+      this._msgs.appendChild(tip);
+      this._msgs.scrollTop = this._msgs.scrollHeight;
+
       try {
-        const res = await fetch('https://luckylabs.pythonanywhere.com/ask',{
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({ 
-            site_id:SITE_ID, 
-            session_id, 
-            user_id, 
-            page_url:window.location.href, 
-            messages:this._history 
+        const res = await fetch('https://luckylabs.pythonanywhere.com/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            site_id: SITE_ID,
+            session_id,
+            user_id,
+            page_url: window.location.href,
+            messages: this._history
           })
         });
-        const data = await res.json(); 
-        tip.remove(); 
-        this._addBotMessage(data.content||'Sorry, I couldn\'t find anything.');
-      } catch(err){ 
-        tip.remove(); 
-        this._addBotMessage('Oops, something went wrong.'); 
-        console.error('Yuno Error:',err); 
+        const data = await res.json();
+        tip.remove();
+        this._addBotMessage(data.content || "Sorry, I couldn't find anything.");
+      } catch (err) {
+        tip.remove();
+        this._addBotMessage('Oops, something went wrong.');
+        console.error('Yuno Error:', err);
       }
     }
   }
@@ -407,6 +447,7 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     const widget = document.createElement('yuno-chat');
+    widget.setAttribute('theme', WIDGET_THEME);
     document.body.appendChild(widget);
   });
 })();
