@@ -305,27 +305,26 @@
         -ms-overflow-style: none;
       }
       /* WebKit */
-      .messages::-webkit-scrollbar {
-        width: 0;
-        background: transparent;
+      /* remove right padding so bubbles can hug the panel edge */
+      .messages {
+        padding: 12px 0 12px 12px !important;
       }
       
-      /* 2) Kill the white “arrow” on user bubbles */
-      .msg.user .chatbot-bubble::after {
-        display: none;
-      }
-      
-      /* 3) Make sure user bubbles hug the right edge */
+      /* flex-end + auto-margin still drives it fully right */
       .msg.user {
-        /* each .msg is a flex item – this forces it all the way right */
-        align-self: flex-end;
+        align-self: flex-end !important;
+        margin-left: auto !important;
       }
-      /* (you may also remove or reduce your .messages padding-right if you want zero gap) */
       
-      /* 4) Right-align the text inside user bubbles */
+      /* inline-block + right-aligned text for multi-line pills */
       .msg.user .chatbot-bubble {
-        text-align: right;
+        display: inline-block !important;
+        max-width: 75%;
+        text-align: right !important;
+        /* no extra right margin */
+        margin-right: 0 !important;
       }
+
 
     </style>
 
