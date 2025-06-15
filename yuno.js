@@ -296,6 +296,37 @@
         0%, 100% { opacity: 0.7; }
         50% { opacity: 1; }
       }
+
+      /* 1) Hide the scrollbar in the messages pane */
+      .messages {
+        /* Firefox */
+        scrollbar-width: none;
+        /* IE 10+ */
+        -ms-overflow-style: none;
+      }
+      /* WebKit */
+      .messages::-webkit-scrollbar {
+        width: 0;
+        background: transparent;
+      }
+      
+      /* 2) Kill the white “arrow” on user bubbles */
+      .msg.user .chatbot-bubble::after {
+        display: none;
+      }
+      
+      /* 3) Make sure user bubbles hug the right edge */
+      .msg.user {
+        /* each .msg is a flex item – this forces it all the way right */
+        align-self: flex-end;
+      }
+      /* (you may also remove or reduce your .messages padding-right if you want zero gap) */
+      
+      /* 4) Right-align the text inside user bubbles */
+      .msg.user .chatbot-bubble {
+        text-align: right;
+      }
+
     </style>
 
     <div class="bubble"><span class="icon">💬</span><span>Ask Yuno</span></div>
