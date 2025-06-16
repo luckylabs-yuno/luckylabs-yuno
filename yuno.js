@@ -38,64 +38,70 @@
         --radius: 24px;
       }
 
-      /* dark theme variables */
+      /* dark theme variables - Orangewood optimized */
       :host([theme="dark"]) {
-        --accent: linear-gradient(to right, #2563eb, #06b6d4);
-        --accent-solid: #2563eb;  /* Solid color for borders/tails */
-        --accent-hover: linear-gradient(to right, #1d4ed8, #0891b2);
-        --panel-bg: rgba(15, 23, 42, 0.75);  /* Increased transparency with darker base */
-        --yuno-bg: rgba(51, 65, 85, 0.9);    /* More distinct from panel background */
-        --blur: blur(25px);  /* Increased blur for more translucency */
-        --border-color: rgba(75, 85, 99, 0.4);
-        --border-hover-color: rgba(107, 114, 128, 0.6);
-        --text-color: #e5e7eb;
-        --text-muted: #9ca3af;
-        --header-bg: rgba(15, 23, 42, 0.85);  /* More translucent header */
-        --close-bg: rgba(51, 65, 85, 0.8);
-        --close-color: #9ca3af;
-        --close-hover-bg: rgba(71, 85, 105, 0.9);
-        --close-hover-color: #e5e7eb;
+        --accent: linear-gradient(to right, #FF6B35, #FF8C42);  /* Orange gradient matching Orangewood */
+        --accent-solid: #FF6B35;  /* Orangewood orange for borders/tails */
+        --accent-hover: linear-gradient(to right, #E55A2B, #FF6B35);
+        --panel-bg: rgba(0, 0, 0, 0.85);  /* Deep black for better Orangewood integration */
+        --yuno-bg: rgba(20, 20, 20, 0.95);    /* Dark charcoal for bot messages */
+        --blur: blur(30px);  /* More intense blur for premium feel */
+        --border-color: rgba(255, 107, 53, 0.2);  /* Subtle orange border */
+        --border-hover-color: rgba(255, 107, 53, 0.4);
+        --text-color: #ffffff;  /* Pure white for high contrast */
+        --text-muted: #a0a0a0;  /* Neutral gray */
+        --header-bg: rgba(0, 0, 0, 0.9);  /* Deep black header */
+        --close-bg: rgba(40, 40, 40, 0.8);
+        --close-color: #a0a0a0;
+        --close-hover-bg: rgba(60, 60, 60, 0.9);
+        --close-hover-color: #ffffff;
       }
 
-      /* light theme variables */
+      /* light theme variables - Orangewood light mode */
       :host([theme="light"]) {
-        --accent: linear-gradient(to right, #2563eb, #06b6d4);
-        --accent-solid: #2563eb;  /* Solid color for borders/tails */
-        --accent-hover: linear-gradient(to right, #1d4ed8, #0891b2);
-        --panel-bg: rgba(248, 250, 252, 0.75);  /* Increased transparency */
-        --yuno-bg: rgba(226, 232, 240, 0.9);     /* More distinct slate color */
-        --blur: blur(20px);  /* Increased blur */
-        --border-color: rgba(203, 213, 225, 0.6);
-        --border-hover-color: rgba(147, 51, 234, 0.4);
-        --text-color: #1e293b;
-        --text-muted: #64748b;
-        --header-bg: rgba(248, 250, 252, 0.8);  /* More translucent */
-        --close-bg: rgba(226, 232, 240, 0.8);
-        --close-color: #64748b;
-        --close-hover-bg: rgba(203, 213, 225, 0.9);
-        --close-hover-color: #334155;
+        --accent: linear-gradient(to right, #FF6B35, #FF8C42);  /* Consistent orange */
+        --accent-solid: #FF6B35;  /* Orangewood orange */
+        --accent-hover: linear-gradient(to right, #E55A2B, #FF6B35);
+        --panel-bg: rgba(255, 255, 255, 0.85);  /* Clean white */
+        --yuno-bg: rgba(248, 248, 248, 0.95);     /* Light gray for distinction */
+        --blur: blur(20px);
+        --border-color: rgba(255, 107, 53, 0.15);  /* Subtle orange border */
+        --border-hover-color: rgba(255, 107, 53, 0.3);
+        --text-color: #1a1a1a;  /* Near black for readability */
+        --text-muted: #666666;
+        --header-bg: rgba(255, 255, 255, 0.9);
+        --close-bg: rgba(240, 240, 240, 0.8);
+        --close-color: #666666;
+        --close-hover-bg: rgba(220, 220, 220, 0.9);
+        --close-hover-color: #1a1a1a;
       }
 
-      /* Trigger pill */
+      /* Trigger pill - Orangewood styling */
       .bubble {
         display: inline-flex;
         align-items: center;
         background: var(--accent);
-        color: #fff;
-        padding: 0 16px;
-        height: 40px;
-        border-radius: var(--radius);
+        color: #ffffff;
+        padding: 0 18px;  /* Slightly more padding */
+        height: 44px;  /* Taller for better presence */
+        border-radius: 22px;  /* More rounded */
         cursor: pointer;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        box-shadow: 0 6px 20px rgba(255, 107, 53, 0.3);  /* Orange glow */
         font-size: 14px;
-        gap: 8px;
+        font-weight: 600;  /* Bolder text */
+        gap: 10px;
         transition: all 0.3s ease;
+        border: 2px solid rgba(255, 255, 255, 0.1);  /* Subtle highlight border */
       }
       .bubble:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4);
+        background: var(--accent-hover);
       }
-      .bubble .icon { font-size: 18px; }
+      .bubble .icon { 
+        font-size: 20px; 
+        filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));  /* Subtle icon shadow */
+      }
 
       /* Teaser input row */
       .teaser {
@@ -152,19 +158,18 @@
         background: var(--accent-hover);
       }
 
-      /* Chat panel */
+      /* Chat panel - Enhanced for Orangewood */
       .chatbox {
         display: none;
         flex-direction: column;
-        width: 320px;
-        max-height: 420px;
+        width: 340px;  /* Slightly wider for better readability */
+        max-height: 450px;  /* Taller for more content */
         background: var(--panel-bg);
         backdrop-filter: var(--blur);
-        border-radius: var(--radius);
-        box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        border-radius: 16px;  /* More modern rounded corners */
+        box-shadow: 0 20px 40px rgba(0,0,0,0.3), 0 0 0 1px var(--border-color);  /* Enhanced shadow + border */
         overflow: hidden;
         animation: slideIn 0.5s ease-out;
-        border: 1px solid var(--border-color);  /* Added subtle border for definition */
       }
       .header {
         display: flex;
@@ -233,15 +238,16 @@
         background: var(--accent-hover);
       }
 
-      /* Bot & User bubbles */
+      /* Bot & User bubbles - Orangewood styling */
       .chatbot-bubble {
         position: relative;
-        padding: 10px 14px;
-        border-radius: var(--radius);
-        max-width: 75%;
-        line-height: 1.4;
+        padding: 12px 16px;  /* More generous padding */
+        border-radius: 18px;  /* More modern bubble shape */
+        max-width: 80%;  /* Slightly wider for better content display */
+        line-height: 1.5;  /* Better readability */
         font-size: 14px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);  /* Softer shadow */
+        font-weight: 400;  /* Clean, readable weight */
       }
       .msg.bot .chatbot-bubble {
         background: var(--yuno-bg);
@@ -253,24 +259,25 @@
         content: '';
         position: absolute;
         bottom: -8px;
-        left: 16px;
+        left: 20px;  /* Moved slightly right for better visual balance */
         border-width: 8px 8px 0 8px;
         border-style: solid;
         border-color: var(--yuno-bg) transparent transparent transparent;
       }
       .msg.user .chatbot-bubble {
-        background: var(--accent-solid);  /* Using solid color instead of gradient */
-        color: #fff;
+        background: var(--accent-solid);
+        color: #ffffff;  /* Always white text on orange */
         align-self: flex-end;
+        font-weight: 500;  /* Slightly bolder for user messages */
       }
       .msg.user .chatbot-bubble::after {
         content: '';
         position: absolute;
         bottom: -8px;
-        right: 16px;
+        right: 20px;  /* Moved slightly left for better visual balance */
         border-width: 8px 8px 0 8px;
         border-style: solid;
-        border-color: var(--accent-solid) transparent transparent transparent;  /* Fixed: using solid color */
+        border-color: var(--accent-solid) transparent transparent transparent;
       }
 
       /* User message alignment fixes */
