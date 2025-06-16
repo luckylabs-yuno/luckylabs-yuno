@@ -1,4 +1,4 @@
-// yuno.js
+// yuno-fixed.js
 'use strict';
 
 (() => {
@@ -31,8 +31,8 @@
       /* common host styles */
       :host {
         position: fixed;
-        bottom: 20px;
-        right: 20px;
+        bottom: 30px;  /* Moved up slightly */
+        right: 30px;   /* Moved left slightly */
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         z-index: 9999;
         --radius: 24px;
@@ -41,37 +41,39 @@
       /* dark theme variables */
       :host([theme="dark"]) {
         --accent: linear-gradient(to right, #2563eb, #06b6d4);
+        --accent-solid: #2563eb;  /* Solid color for borders/tails */
         --accent-hover: linear-gradient(to right, #1d4ed8, #0891b2);
-        --panel-bg: rgba(31, 41, 55, 0.8);
-        --yuno-bg: #1f2937;
-        --blur: blur(20px);
-        --border-color: rgba(75, 85, 99, 0.3);
-        --border-hover-color: rgba(107, 114, 128, 0.5);
+        --panel-bg: rgba(15, 23, 42, 0.75);  /* Increased transparency with darker base */
+        --yuno-bg: rgba(51, 65, 85, 0.9);    /* More distinct from panel background */
+        --blur: blur(25px);  /* Increased blur for more translucency */
+        --border-color: rgba(75, 85, 99, 0.4);
+        --border-hover-color: rgba(107, 114, 128, 0.6);
         --text-color: #e5e7eb;
         --text-muted: #9ca3af;
-        --header-bg: rgba(31, 41, 55, 0.9);
-        --close-bg: rgba(31,41,55,0.8);
+        --header-bg: rgba(15, 23, 42, 0.85);  /* More translucent header */
+        --close-bg: rgba(51, 65, 85, 0.8);
         --close-color: #9ca3af;
-        --close-hover-bg: rgba(31,41,55,0.9);
+        --close-hover-bg: rgba(71, 85, 105, 0.9);
         --close-hover-color: #e5e7eb;
       }
 
       /* light theme variables */
       :host([theme="light"]) {
         --accent: linear-gradient(to right, #2563eb, #06b6d4);
+        --accent-solid: #2563eb;  /* Solid color for borders/tails */
         --accent-hover: linear-gradient(to right, #1d4ed8, #0891b2);
-        --panel-bg: rgba(255, 255, 255, 0.85);
-        --yuno-bg: rgba(248, 250, 252, 0.95);
-        --blur: blur(12px);
-        --border-color: rgba(238, 238, 238, 0.8);
-        --border-hover-color: rgba(147, 51, 234, 0.3);
+        --panel-bg: rgba(248, 250, 252, 0.75);  /* Increased transparency */
+        --yuno-bg: rgba(226, 232, 240, 0.9);     /* More distinct slate color */
+        --blur: blur(20px);  /* Increased blur */
+        --border-color: rgba(203, 213, 225, 0.6);
+        --border-hover-color: rgba(147, 51, 234, 0.4);
         --text-color: #1e293b;
         --text-muted: #64748b;
-        --header-bg: rgba(255,255,255,0.9);
-        --close-bg: #fff;
-        --close-color: #666;
-        --close-hover-bg: #f3f4f6;
-        --close-hover-color: #333;
+        --header-bg: rgba(248, 250, 252, 0.8);  /* More translucent */
+        --close-bg: rgba(226, 232, 240, 0.8);
+        --close-color: #64748b;
+        --close-hover-bg: rgba(203, 213, 225, 0.9);
+        --close-hover-color: #334155;
       }
 
       /* Trigger pill */
@@ -162,6 +164,7 @@
         box-shadow: 0 8px 24px rgba(0,0,0,0.2);
         overflow: hidden;
         animation: slideIn 0.5s ease-out;
+        border: 1px solid var(--border-color);  /* Added subtle border for definition */
       }
       .header {
         display: flex;
@@ -172,6 +175,7 @@
         font-weight: bold;
         color: var(--text-color);
         background: var(--header-bg);
+        backdrop-filter: var(--blur);
       }
       .close-btn {
         background: none;
@@ -191,11 +195,18 @@
         display: flex;
         flex-direction: column;
         gap: 12px;
+        /* Hide scrollbar */
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+      .messages::-webkit-scrollbar {
+        display: none;
       }
       .input-row {
         display: flex;
         border-top: 1px solid var(--border-color);
         background: var(--header-bg);
+        backdrop-filter: var(--blur);
       }
       .input-row input {
         flex: 1;
@@ -205,6 +216,9 @@
         outline: none;
         background: transparent;
         color: var(--text-color);
+      }
+      .input-row input::placeholder {
+        color: var(--text-muted);
       }
       .input-row button {
         background: var(--accent);
@@ -245,7 +259,7 @@
         border-color: var(--yuno-bg) transparent transparent transparent;
       }
       .msg.user .chatbot-bubble {
-        background: var(--accent);
+        background: var(--accent-solid);  /* Using solid color instead of gradient */
         color: #fff;
         align-self: flex-end;
       }
@@ -256,7 +270,24 @@
         right: 16px;
         border-width: 8px 8px 0 8px;
         border-style: solid;
-        border-color: var(--accent) transparent transparent transparent;
+        border-color: var(--accent-solid) transparent transparent transparent;  /* Fixed: using solid color */
+      }
+
+      /* User message alignment fixes */
+      .messages {
+        padding: 12px 0 12px 12px !important;
+      }
+      
+      .msg.user {
+        align-self: flex-end !important;
+        margin-left: auto !important;
+      }
+      
+      .msg.user .chatbot-bubble {
+        display: inline-block !important;
+        max-width: 75%;
+        text-align: right !important;
+        margin-right: 0 !important;
       }
 
       /* Typing indicator */
@@ -274,7 +305,7 @@
       .typing .dot {
         width: 6px;
         height: 6px;
-        background: var(--accent);
+        background: var(--accent-solid);
         border-radius: 50%;
         animation: bounce 0.8s infinite ease-in-out;
       }
@@ -296,36 +327,6 @@
         0%, 100% { opacity: 0.7; }
         50% { opacity: 1; }
       }
-
-      /* 1) Hide the scrollbar in the messages pane */
-      .messages {
-        /* Firefox */
-        scrollbar-width: none;
-        /* IE 10+ */
-        -ms-overflow-style: none;
-      }
-      /* WebKit */
-      /* remove right padding so bubbles can hug the panel edge */
-      .messages {
-        padding: 12px 0 12px 12px !important;
-      }
-      
-      /* flex-end + auto-margin still drives it fully right */
-      .msg.user {
-        align-self: flex-end !important;
-        margin-left: auto !important;
-      }
-      
-      /* inline-block + right-aligned text for multi-line pills */
-      .msg.user .chatbot-bubble {
-        display: inline-block !important;
-        max-width: 75%;
-        text-align: right !important;
-        /* no extra right margin */
-        margin-right: 0 !important;
-      }
-
-
     </style>
 
     <div class="bubble"><span class="icon">💬</span><span>Ask Yuno</span></div>
