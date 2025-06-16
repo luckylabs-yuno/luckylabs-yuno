@@ -238,43 +238,50 @@
         background: var(--accent-hover);
       }
 
-      /* Bot & User bubbles - Orangewood styling */
+      /* Bot & User bubbles - Fixed text overflow and positioning */
       .chatbot-bubble {
         position: relative;
-        padding: 12px 16px;  /* More generous padding */
-        border-radius: 18px;  /* More modern bubble shape */
-        max-width: 80%;  /* Slightly wider for better content display */
-        line-height: 1.5;  /* Better readability */
+        padding: 12px 16px;
+        border-radius: 18px;
+        max-width: 80%;
+        line-height: 1.5;
         font-size: 14px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.15);  /* Softer shadow */
-        font-weight: 400;  /* Clean, readable weight */
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        font-weight: 400;
+        word-wrap: break-word !important;  /* Prevent text overflow */
+        overflow-wrap: break-word !important;
+        hyphens: auto !important;
+        white-space: pre-wrap !important;  /* Preserve line breaks and wrap text */
       }
       .msg.bot .chatbot-bubble {
         background: var(--yuno-bg);
         color: var(--text-color);
         align-self: flex-start;
         border: 1px solid var(--border-color);
+        margin-right: auto;  /* Push to left */
       }
       .msg.bot .chatbot-bubble::after {
         content: '';
         position: absolute;
         bottom: -8px;
-        left: 20px;  /* Moved slightly right for better visual balance */
+        left: 20px;
         border-width: 8px 8px 0 8px;
         border-style: solid;
         border-color: var(--yuno-bg) transparent transparent transparent;
       }
       .msg.user .chatbot-bubble {
         background: var(--accent-solid);
-        color: #ffffff;  /* Always white text on orange */
+        color: #ffffff !important;
         align-self: flex-end;
-        font-weight: 500;  /* Slightly bolder for user messages */
+        font-weight: 500;
+        margin-left: auto;  /* Push to right */
+        margin-right: 0 !important;  /* No right margin */
       }
       .msg.user .chatbot-bubble::after {
         content: '';
         position: absolute;
         bottom: -8px;
-        right: 20px;  /* Moved slightly left for better visual balance */
+        right: 20px;
         border-width: 8px 8px 0 8px;
         border-style: solid;
         border-color: var(--accent-solid) transparent transparent transparent;
@@ -282,19 +289,27 @@
 
       /* User message alignment fixes */
       .messages {
-        padding: 12px 0 12px 12px !important;
+        padding: 12px 12px 12px 12px !important;  /* Equal padding on both sides */
       }
       
       .msg.user {
         align-self: flex-end !important;
         margin-left: auto !important;
+        margin-right: 0 !important;  /* Ensure no right margin */
+        width: 100%;  /* Full width to push bubble to edge */
+        display: flex !important;
+        justify-content: flex-end !important;  /* Push content to right */
       }
       
       .msg.user .chatbot-bubble {
         display: inline-block !important;
-        max-width: 75%;
-        text-align: right !important;
+        max-width: 80%;  /* Increased max-width */
+        text-align: left !important;  /* Left-align text within bubble for readability */
         margin-right: 0 !important;
+        margin-left: auto !important;
+        word-wrap: break-word !important;  /* Prevent text overflow */
+        overflow-wrap: break-word !important;
+        hyphens: auto !important;
       }
 
       /* Typing indicator */
