@@ -2,9 +2,21 @@
 'use strict';
 
 (() => {
-  const SCRIPT_NAME = 'yuno.js';
+  // Better script detection - look for multiple possible names
+  const SCRIPT_NAMES = ['yuno.js', 'widget.js', 'yuno-modular.js'];
   const allScripts = Array.from(document.getElementsByTagName('script'));
-  const thisScript = allScripts.find(s => s.src && s.src.includes(SCRIPT_NAME));
+  
+  // Find the current script by checking multiple patterns
+  const thisScript = allScripts.find(s => {
+    if (!s.src) return false;
+    return SCRIPT_NAMES.some(name => s.src.includes(name)) || s.hasAttribute('site_id');
+  }) || document.currentScript;
+  
+  console.log('🔍 Script detection:', {
+    foundScript: !!thisScript,
+    scriptSrc: thisScript?.src,
+    hasAttributes: thisScript ? Array.from(thisScript.attributes).map(a => a.name) : []
+  });
   
   // Configuration from script attributes with fallbacks
   const CONFIG = {
@@ -45,6 +57,9 @@
     animation: thisScript?.getAttribute('animation') || 'slide', // slide, fade, scale
   };
 
+  // Debug configuration
+  console.log('🎨 Yuno Config:', CONFIG);
+
   // Session & user persistence
   const now = Date.now();
   let session_id = localStorage.getItem('yuno_session_id');
@@ -72,17 +87,32 @@
       ${horizontal}: 30px;
     `;
 
-    // Color overrides
+    // Color overrides - enhanced to work properly
     let colorOverrides = '';
+    
     if (CONFIG.primaryColor) {
-      colorOverrides += `--accent: ${CONFIG.primaryColor}; --accent-solid: ${CONFIG.primaryColor};`;
+      colorOverrides += `
+        --accent: ${CONFIG.primaryColor}; 
+        --accent-solid: ${CONFIG.primaryColor};
+        --accent-hover: ${CONFIG.primaryColor};
+      `;
     }
+    
     if (CONFIG.accentColor) {
-      colorOverrides += `--accent-hover: ${CONFIG.accentColor};`;
+      colorOverrides += `
+        --accent: linear-gradient(to right, ${CONFIG.primaryColor || '#FF6B35'}, ${CONFIG.accentColor});
+        --accent-hover: ${CONFIG.accentColor};
+      `;
     }
+    
     if (CONFIG.backgroundColor) {
-      colorOverrides += `--panel-bg: ${CONFIG.backgroundColor}; --yuno-bg: ${CONFIG.backgroundColor};`;
+      colorOverrides += `
+        --panel-bg: ${CONFIG.backgroundColor}; 
+        --yuno-bg: ${CONFIG.backgroundColor}; 
+        --header-bg: ${CONFIG.backgroundColor};
+      `;
     }
+    
     if (CONFIG.textColor) {
       colorOverrides += `--text-color: ${CONFIG.textColor};`;
     }
