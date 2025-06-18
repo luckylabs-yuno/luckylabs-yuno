@@ -76,7 +76,7 @@
     localStorage.setItem('yuno_user_id', user_id);
   }
 
-  // Generate dynamic CSS based on config
+  // Generate dynamic CSS based on config - FIXED COLOR OVERRIDE LOGIC
   function generateDynamicCSS() {
     const position = CONFIG.position.split('-');
     const vertical = position[0]; // top or bottom
@@ -87,34 +87,39 @@
       ${horizontal}: 30px;
     `;
 
-    // Color overrides - enhanced to work properly
+    // Enhanced color overrides that actually work
     let colorOverrides = '';
     
     if (CONFIG.primaryColor) {
-      colorOverrides += `
-        --accent: ${CONFIG.primaryColor}; 
-        --accent-solid: ${CONFIG.primaryColor};
-        --accent-hover: ${CONFIG.primaryColor};
-      `;
-    }
-    
-    if (CONFIG.accentColor) {
-      colorOverrides += `
-        --accent: linear-gradient(to right, ${CONFIG.primaryColor || '#FF6B35'}, ${CONFIG.accentColor});
-        --accent-hover: ${CONFIG.accentColor};
-      `;
+      if (CONFIG.accentColor) {
+        // If both primary and accent colors are set, create gradient
+        colorOverrides += `
+          --accent: linear-gradient(to right, ${CONFIG.primaryColor}, ${CONFIG.accentColor}) !important;
+          --accent-solid: ${CONFIG.primaryColor} !important;
+          --accent-hover: linear-gradient(to right, ${CONFIG.accentColor}, ${CONFIG.primaryColor}) !important;
+        `;
+      } else {
+        // Just primary color
+        colorOverrides += `
+          --accent: ${CONFIG.primaryColor} !important;
+          --accent-solid: ${CONFIG.primaryColor} !important;
+          --accent-hover: ${CONFIG.primaryColor} !important;
+        `;
+      }
     }
     
     if (CONFIG.backgroundColor) {
       colorOverrides += `
-        --panel-bg: ${CONFIG.backgroundColor}; 
-        --yuno-bg: ${CONFIG.backgroundColor}; 
-        --header-bg: ${CONFIG.backgroundColor};
+        --panel-bg: ${CONFIG.backgroundColor} !important;
+        --yuno-bg: ${CONFIG.backgroundColor} !important;
+        --header-bg: ${CONFIG.backgroundColor} !important;
       `;
     }
     
     if (CONFIG.textColor) {
-      colorOverrides += `--text-color: ${CONFIG.textColor};`;
+      colorOverrides += `
+        --text-color: ${CONFIG.textColor} !important;
+      `;
     }
 
     return `
@@ -137,7 +142,7 @@
     `;
   }
 
-  // Template with dynamic content
+  // Template with dynamic content and powered by message
   const template = document.createElement('template');
   template.innerHTML = `
     <style>
@@ -173,14 +178,14 @@
         --accent: linear-gradient(to right, #FF6B35, #FF8C42);
         --accent-solid: #FF6B35;
         --accent-hover: linear-gradient(to right, #E55A2B, #FF6B35);
-        --panel-bg: rgba(255, 255, 255, 0.85);
-        --yuno-bg: rgba(248, 248, 248, 0.95);
+        --panel-bg: rgba(255, 255, 255, 0.95);
+        --yuno-bg: rgba(248, 248, 248, 0.98);
         --blur: blur(20px);
-        --border-color: rgba(255, 107, 53, 0.15);
-        --border-hover-color: rgba(255, 107, 53, 0.3);
+        --border-color: rgba(0, 0, 0, 0.1);
+        --border-hover-color: rgba(0, 0, 0, 0.2);
         --text-color: #1a1a1a;
         --text-muted: #666666;
-        --header-bg: rgba(255, 255, 255, 0.9);
+        --header-bg: rgba(255, 255, 255, 0.98);
         --close-bg: rgba(240, 240, 240, 0.8);
         --close-color: #666666;
         --close-hover-bg: rgba(220, 220, 220, 0.9);
@@ -358,6 +363,25 @@
       .close-btn:hover {
         color: var(--close-hover-color);
       }
+
+      /* NEW: Powered by Yuno message */
+      .powered-by {
+        padding: 6px 12px;
+        text-align: center;
+        font-size: 11px;
+        color: var(--text-muted);
+        background: rgba(0, 0, 0, 0.02);
+        border-bottom: 1px solid var(--border-color);
+      }
+      .powered-by a {
+        color: var(--accent-solid);
+        text-decoration: none;
+        font-weight: 500;
+      }
+      .powered-by a:hover {
+        text-decoration: underline;
+      }
+
       .messages {
         flex: 1;
         overflow-y: auto;
@@ -524,6 +548,7 @@
     </div>
     <div class="chatbox ${CONFIG.animation}">
       <div class="header">${CONFIG.headerTitle} <button class="close-btn">×</button></div>
+      <div class="powered-by">Powered by <a href="https://helloyuno.com" target="_blank">HelloYuno</a></div>
       <div class="messages"></div>
       <div class="input-row">
         <input type="text" placeholder="${CONFIG.placeholder}" aria-label="${CONFIG.placeholder}" />
