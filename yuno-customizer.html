@@ -946,7 +946,8 @@
             if (config.placeholder !== "Type your message…") code += `        placeholder="${config.placeholder}"\n`;
             if (config.borderRadius !== "16px") code += `        border_radius="${config.borderRadius}"\n`;
             
-            code += `        defer></script>`;
+
+            code += "/</script/>";  // Remove the "defer" part
             
             const codeElement = safeGetElement('generatedCode');
             if (codeElement) {
