@@ -1,12 +1,49 @@
-// yuno-fixed.js
+// yuno-modular.js
 'use strict';
 
 (() => {
-  const SCRIPT_NAME = 'yuno.js';
+  const SCRIPT_NAME = 'widget.js';
   const allScripts = Array.from(document.getElementsByTagName('script'));
   const thisScript = allScripts.find(s => s.src && s.src.includes(SCRIPT_NAME));
-  const SITE_ID = thisScript?.getAttribute('site_id') || 'default_site';
-  const WIDGET_THEME = thisScript?.getAttribute('theme') || 'dark';
+  
+  // Configuration from script attributes with fallbacks
+  const CONFIG = {
+    // Core settings
+    siteId: thisScript?.getAttribute('site_id') || 'default_site',
+    apiEndpoint: thisScript?.getAttribute('api_endpoint') || 'https://luckylabs.pythonanywhere.com/ask',
+    
+    // Appearance
+    theme: thisScript?.getAttribute('theme') || 'dark',
+    position: thisScript?.getAttribute('position') || 'bottom-right', // bottom-right, bottom-left, top-right, top-left
+    
+    // Colors (can override theme defaults)
+    primaryColor: thisScript?.getAttribute('primary_color') || null,
+    accentColor: thisScript?.getAttribute('accent_color') || null,
+    backgroundColor: thisScript?.getAttribute('background_color') || null,
+    textColor: thisScript?.getAttribute('text_color') || null,
+    
+    // Messages
+    welcomeMessage: thisScript?.getAttribute('welcome_message') || "Hi! I'm Yuno—how can I help you today?",
+    teaserMessage: thisScript?.getAttribute('teaser_message') || "Let me know if you need help",
+    triggerText: thisScript?.getAttribute('trigger_text') || "Ask Yuno",
+    triggerIcon: thisScript?.getAttribute('trigger_icon') || "💬",
+    headerTitle: thisScript?.getAttribute('header_title') || "Chat with Yuno",
+    placeholder: thisScript?.getAttribute('placeholder') || "Type your message…",
+    
+    // Behavior
+    autoShow: thisScript?.getAttribute('auto_show') !== 'false', // default true
+    autoShowDelay: parseInt(thisScript?.getAttribute('auto_show_delay') || '1000', 10),
+    showTeaser: thisScript?.getAttribute('show_teaser') !== 'false', // default true
+    
+    // Dimensions
+    width: thisScript?.getAttribute('width') || '340px',
+    height: thisScript?.getAttribute('height') || '450px',
+    
+    // Advanced
+    borderRadius: thisScript?.getAttribute('border_radius') || '16px',
+    blurEffect: thisScript?.getAttribute('blur_effect') !== 'false', // default true
+    animation: thisScript?.getAttribute('animation') || 'slide', // slide, fade, scale
+  };
 
   // Session & user persistence
   const now = Date.now();
@@ -24,50 +61,94 @@
     localStorage.setItem('yuno_user_id', user_id);
   }
 
-  // Template: trigger pill, teaser input, and chat panel
+  // Generate dynamic CSS based on config
+  function generateDynamicCSS() {
+    const position = CONFIG.position.split('-');
+    const vertical = position[0]; // top or bottom
+    const horizontal = position[1]; // left or right
+    
+    const positionCSS = `
+      ${vertical}: 30px;
+      ${horizontal}: 30px;
+    `;
+
+    // Color overrides
+    let colorOverrides = '';
+    if (CONFIG.primaryColor) {
+      colorOverrides += `--accent: ${CONFIG.primaryColor}; --accent-solid: ${CONFIG.primaryColor};`;
+    }
+    if (CONFIG.accentColor) {
+      colorOverrides += `--accent-hover: ${CONFIG.accentColor};`;
+    }
+    if (CONFIG.backgroundColor) {
+      colorOverrides += `--panel-bg: ${CONFIG.backgroundColor}; --yuno-bg: ${CONFIG.backgroundColor};`;
+    }
+    if (CONFIG.textColor) {
+      colorOverrides += `--text-color: ${CONFIG.textColor};`;
+    }
+
+    return `
+      :host {
+        ${positionCSS}
+        ${colorOverrides}
+      }
+      
+      .chatbox {
+        width: ${CONFIG.width};
+        max-height: ${CONFIG.height};
+        border-radius: ${CONFIG.borderRadius};
+        ${!CONFIG.blurEffect ? 'backdrop-filter: none;' : ''}
+      }
+      
+      .teaser, .bubble {
+        border-radius: ${CONFIG.borderRadius};
+        ${!CONFIG.blurEffect ? 'backdrop-filter: none;' : ''}
+      }
+    `;
+  }
+
+  // Template with dynamic content
   const template = document.createElement('template');
   template.innerHTML = `
     <style>
-      /* common host styles */
+      /* Base host styles */
       :host {
         position: fixed;
-        bottom: 30px;  /* Moved up slightly */
-        right: 30px;   /* Moved left slightly */
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         z-index: 9999;
         --radius: 24px;
       }
 
-      /* dark theme variables - Orangewood optimized */
+      /* Dark theme variables */
       :host([theme="dark"]) {
-        --accent: linear-gradient(to right, #FF6B35, #FF8C42);  /* Orange gradient matching Orangewood */
-        --accent-solid: #FF6B35;  /* Orangewood orange for borders/tails */
+        --accent: linear-gradient(to right, #FF6B35, #FF8C42);
+        --accent-solid: #FF6B35;
         --accent-hover: linear-gradient(to right, #E55A2B, #FF6B35);
-        --panel-bg: rgba(0, 0, 0, 0.85);  /* Deep black for better Orangewood integration */
-        --yuno-bg: rgba(20, 20, 20, 0.95);    /* Dark charcoal for bot messages */
-        --blur: blur(30px);  /* More intense blur for premium feel */
-        --border-color: rgba(255, 107, 53, 0.2);  /* Subtle orange border */
+        --panel-bg: rgba(0, 0, 0, 0.85);
+        --yuno-bg: rgba(20, 20, 20, 0.95);
+        --blur: blur(30px);
+        --border-color: rgba(255, 107, 53, 0.2);
         --border-hover-color: rgba(255, 107, 53, 0.4);
-        --text-color: #ffffff;  /* Pure white for high contrast */
-        --text-muted: #a0a0a0;  /* Neutral gray */
-        --header-bg: rgba(0, 0, 0, 0.9);  /* Deep black header */
+        --text-color: #ffffff;
+        --text-muted: #a0a0a0;
+        --header-bg: rgba(0, 0, 0, 0.9);
         --close-bg: rgba(40, 40, 40, 0.8);
         --close-color: #a0a0a0;
         --close-hover-bg: rgba(60, 60, 60, 0.9);
         --close-hover-color: #ffffff;
       }
 
-      /* light theme variables - Orangewood light mode */
+      /* Light theme variables */
       :host([theme="light"]) {
-        --accent: linear-gradient(to right, #FF6B35, #FF8C42);  /* Consistent orange */
-        --accent-solid: #FF6B35;  /* Orangewood orange */
+        --accent: linear-gradient(to right, #FF6B35, #FF8C42);
+        --accent-solid: #FF6B35;
         --accent-hover: linear-gradient(to right, #E55A2B, #FF6B35);
-        --panel-bg: rgba(255, 255, 255, 0.85);  /* Clean white */
-        --yuno-bg: rgba(248, 248, 248, 0.95);     /* Light gray for distinction */
+        --panel-bg: rgba(255, 255, 255, 0.85);
+        --yuno-bg: rgba(248, 248, 248, 0.95);
         --blur: blur(20px);
-        --border-color: rgba(255, 107, 53, 0.15);  /* Subtle orange border */
+        --border-color: rgba(255, 107, 53, 0.15);
         --border-hover-color: rgba(255, 107, 53, 0.3);
-        --text-color: #1a1a1a;  /* Near black for readability */
+        --text-color: #1a1a1a;
         --text-muted: #666666;
         --header-bg: rgba(255, 255, 255, 0.9);
         --close-bg: rgba(240, 240, 240, 0.8);
@@ -76,22 +157,63 @@
         --close-hover-color: #1a1a1a;
       }
 
-      /* Trigger pill - Orangewood styling */
+      /* Blue theme */
+      :host([theme="blue"]) {
+        --accent: linear-gradient(to right, #3B82F6, #1D4ED8);
+        --accent-solid: #3B82F6;
+        --accent-hover: linear-gradient(to right, #2563EB, #1E40AF);
+        --panel-bg: rgba(0, 0, 0, 0.85);
+        --yuno-bg: rgba(20, 20, 30, 0.95);
+        --blur: blur(30px);
+        --border-color: rgba(59, 130, 246, 0.2);
+        --border-hover-color: rgba(59, 130, 246, 0.4);
+        --text-color: #ffffff;
+        --text-muted: #a0a0a0;
+        --header-bg: rgba(0, 0, 0, 0.9);
+        --close-bg: rgba(40, 40, 40, 0.8);
+        --close-color: #a0a0a0;
+        --close-hover-bg: rgba(60, 60, 60, 0.9);
+        --close-hover-color: #ffffff;
+      }
+
+      /* Green theme */
+      :host([theme="green"]) {
+        --accent: linear-gradient(to right, #10B981, #059669);
+        --accent-solid: #10B981;
+        --accent-hover: linear-gradient(to right, #0D9488, #047857);
+        --panel-bg: rgba(0, 0, 0, 0.85);
+        --yuno-bg: rgba(20, 30, 20, 0.95);
+        --blur: blur(30px);
+        --border-color: rgba(16, 185, 129, 0.2);
+        --border-hover-color: rgba(16, 185, 129, 0.4);
+        --text-color: #ffffff;
+        --text-muted: #a0a0a0;
+        --header-bg: rgba(0, 0, 0, 0.9);
+        --close-bg: rgba(40, 40, 40, 0.8);
+        --close-color: #a0a0a0;
+        --close-hover-bg: rgba(60, 60, 60, 0.9);
+        --close-hover-color: #ffffff;
+      }
+
+      /* Dynamic CSS will be injected here */
+      ${generateDynamicCSS()}
+
+      /* Trigger pill */
       .bubble {
         display: inline-flex;
         align-items: center;
         background: var(--accent);
         color: #ffffff;
-        padding: 0 18px;  /* Slightly more padding */
-        height: 44px;  /* Taller for better presence */
-        border-radius: 22px;  /* More rounded */
+        padding: 0 18px;
+        height: 44px;
+        border-radius: 22px;
         cursor: pointer;
-        box-shadow: 0 6px 20px rgba(255, 107, 53, 0.3);  /* Orange glow */
+        box-shadow: 0 6px 20px rgba(255, 107, 53, 0.3);
         font-size: 14px;
-        font-weight: 600;  /* Bolder text */
+        font-weight: 600;
         gap: 10px;
         transition: all 0.3s ease;
-        border: 2px solid rgba(255, 255, 255, 0.1);  /* Subtle highlight border */
+        border: 2px solid rgba(255, 255, 255, 0.1);
       }
       .bubble:hover {
         transform: translateY(-3px);
@@ -100,7 +222,7 @@
       }
       .bubble .icon { 
         font-size: 20px; 
-        filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));  /* Subtle icon shadow */
+        filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
       }
 
       /* Teaser input row */
@@ -115,10 +237,26 @@
         gap: 8px;
         animation: slideIn 0.5s ease-out;
       }
+      
+      /* Animation styles */
       @keyframes slideIn {
         from { transform: translateY(20px); opacity: 0; }
         to { transform: translateY(0); opacity: 1; }
       }
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      @keyframes scaleIn {
+        from { transform: scale(0.8); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+      }
+      
+      .teaser.fade { animation: fadeIn 0.5s ease-out; }
+      .teaser.scale { animation: scaleIn 0.5s ease-out; }
+      .chatbox.fade { animation: fadeIn 0.5s ease-out; }
+      .chatbox.scale { animation: scaleIn 0.5s ease-out; }
+
       .teaser .close {
         width: 32px;
         height: 32px;
@@ -158,16 +296,13 @@
         background: var(--accent-hover);
       }
 
-      /* Chat panel - Enhanced for Orangewood */
+      /* Chat panel */
       .chatbox {
         display: none;
         flex-direction: column;
-        width: 340px;  /* Slightly wider for better readability */
-        max-height: 450px;  /* Taller for more content */
         background: var(--panel-bg);
         backdrop-filter: var(--blur);
-        border-radius: 16px;  /* More modern rounded corners */
-        box-shadow: 0 20px 40px rgba(0,0,0,0.3), 0 0 0 1px var(--border-color);  /* Enhanced shadow + border */
+        box-shadow: 0 20px 40px rgba(0,0,0,0.3), 0 0 0 1px var(--border-color);
         overflow: hidden;
         animation: slideIn 0.5s ease-out;
       }
@@ -200,7 +335,6 @@
         display: flex;
         flex-direction: column;
         gap: 12px;
-        /* Hide scrollbar */
         scrollbar-width: none;
         -ms-overflow-style: none;
       }
@@ -238,7 +372,7 @@
         background: var(--accent-hover);
       }
 
-      /* Bot & User bubbles - Fixed text overflow and positioning */
+      /* Bot & User bubbles */
       .chatbot-bubble {
         position: relative;
         padding: 12px 16px;
@@ -248,17 +382,17 @@
         font-size: 14px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         font-weight: 400;
-        word-wrap: break-word !important;  /* Prevent text overflow */
+        word-wrap: break-word !important;
         overflow-wrap: break-word !important;
         hyphens: auto !important;
-        white-space: pre-wrap !important;  /* Preserve line breaks and wrap text */
+        white-space: pre-wrap !important;
       }
       .msg.bot .chatbot-bubble {
         background: var(--yuno-bg);
         color: var(--text-color);
         align-self: flex-start;
         border: 1px solid var(--border-color);
-        margin-right: auto;  /* Push to left */
+        margin-right: auto;
       }
       .msg.bot .chatbot-bubble::after {
         content: '';
@@ -274,8 +408,8 @@
         color: #ffffff !important;
         align-self: flex-end;
         font-weight: 500;
-        margin-left: auto;  /* Push to right */
-        margin-right: 0 !important;  /* No right margin */
+        margin-left: auto;
+        margin-right: 0 !important;
       }
       .msg.user .chatbot-bubble::after {
         content: '';
@@ -287,27 +421,22 @@
         border-color: var(--accent-solid) transparent transparent transparent;
       }
 
-      /* User message alignment fixes */
-      .messages {
-        padding: 12px 12px 12px 12px !important;  /* Equal padding on both sides */
-      }
-      
       .msg.user {
         align-self: flex-end !important;
         margin-left: auto !important;
-        margin-right: 0 !important;  /* Ensure no right margin */
-        width: 100%;  /* Full width to push bubble to edge */
+        margin-right: 0 !important;
+        width: 100%;
         display: flex !important;
-        justify-content: flex-end !important;  /* Push content to right */
+        justify-content: flex-end !important;
       }
       
       .msg.user .chatbot-bubble {
         display: inline-block !important;
-        max-width: 80%;  /* Increased max-width */
-        text-align: left !important;  /* Left-align text within bubble for readability */
+        max-width: 80%;
+        text-align: left !important;
         margin-right: 0 !important;
         margin-left: auto !important;
-        word-wrap: break-word !important;  /* Prevent text overflow */
+        word-wrap: break-word !important;
         overflow-wrap: break-word !important;
         hyphens: auto !important;
       }
@@ -349,19 +478,25 @@
         0%, 100% { opacity: 0.7; }
         50% { opacity: 1; }
       }
+
+      /* Hide elements based on config */
+      .teaser.hide { display: none !important; }
     </style>
 
-    <div class="bubble"><span class="icon">💬</span><span>Ask Yuno</span></div>
-    <div class="teaser">
-      <div class="close">×</div>
-      <div class="input">Let me know if you need help</div>
-      <button class="ask-btn">Ask Yuno</button>
+    <div class="bubble">
+      <span class="icon">${CONFIG.triggerIcon}</span>
+      <span>${CONFIG.triggerText}</span>
     </div>
-    <div class="chatbox">
-      <div class="header">Chat with Yuno <button class="close-btn">×</button></div>
+    <div class="teaser ${CONFIG.animation} ${!CONFIG.showTeaser ? 'hide' : ''}">
+      <div class="close">×</div>
+      <div class="input">${CONFIG.teaserMessage}</div>
+      <button class="ask-btn">${CONFIG.triggerText}</button>
+    </div>
+    <div class="chatbox ${CONFIG.animation}">
+      <div class="header">${CONFIG.headerTitle} <button class="close-btn">×</button></div>
       <div class="messages"></div>
       <div class="input-row">
-        <input type="text" placeholder="Type your message…" aria-label="Type your message" />
+        <input type="text" placeholder="${CONFIG.placeholder}" aria-label="${CONFIG.placeholder}" />
         <button>Send</button>
       </div>
     </div>
@@ -392,19 +527,21 @@
     }
 
     connectedCallback() {
-      // apply initial theme
+      // Apply initial theme
       if (!this.hasAttribute('theme')) {
-        this.setAttribute('theme', WIDGET_THEME);
+        this.setAttribute('theme', CONFIG.theme);
       }
 
-      // Auto-show teaser after 1 second
-      setTimeout(() => {
-        if (!this._teaserShown) {
-          this._bubble.style.display = 'none';
-          this._teaser.style.display = 'inline-flex';
-          this._teaserShown = true;
-        }
-      }, 1000);
+      // Auto-show teaser based on config
+      if (CONFIG.autoShow && CONFIG.showTeaser) {
+        setTimeout(() => {
+          if (!this._teaserShown) {
+            this._bubble.style.display = 'none';
+            this._teaser.style.display = 'inline-flex';
+            this._teaserShown = true;
+          }
+        }, CONFIG.autoShowDelay);
+      }
 
       this._bubble.addEventListener('click', () => this._openChat());
       this._closeTeaser.addEventListener('click', () => this._hideTeaser());
@@ -430,7 +567,7 @@
       this._box.style.display = open ? 'flex' : 'none';
       if (!open) this._bubble.style.display = 'inline-flex';
       if (open && this._first) {
-        this._addBotMessage("Hi! I'm Yuno—how can I help you today?");
+        this._addBotMessage(CONFIG.welcomeMessage);
         this._first = false;
       }
       if (open) this._input.focus();
@@ -474,11 +611,11 @@
       this._msgs.scrollTop = this._msgs.scrollHeight;
 
       try {
-        const res = await fetch('https://luckylabs.pythonanywhere.com/ask', {
+        const res = await fetch(CONFIG.apiEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            site_id: SITE_ID,
+            site_id: CONFIG.siteId,
             session_id,
             user_id,
             page_url: window.location.href,
@@ -500,7 +637,7 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     const widget = document.createElement('yuno-chat');
-    widget.setAttribute('theme', WIDGET_THEME);
+    widget.setAttribute('theme', CONFIG.theme);
     document.body.appendChild(widget);
   });
 })();
