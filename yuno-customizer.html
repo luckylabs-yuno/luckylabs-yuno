@@ -185,15 +185,6 @@
             transform: translateX(20px);
         }
 
-        .preview-frame {
-            width: 100%;
-            height: 100%;
-            border: none;
-            border-radius: 12px;
-            background: #f8fafc;
-            position: relative;
-        }
-
         .device-frame {
             position: absolute;
             top: 50%;
@@ -226,6 +217,7 @@
             line-height: 1.5;
             overflow-x: auto;
             margin-top: 20px;
+            white-space: pre;
         }
 
         .copy-btn {
@@ -304,7 +296,6 @@
             color: white;
         }
 
-        /* Widget Preview Styles */
         .widget-preview {
             position: absolute;
             bottom: 30px;
@@ -703,51 +694,84 @@
             }
         };
 
+        // Utility functions
+        function safeGetElement(id) {
+            return document.getElementById(id);
+        }
+
+        function safeSetValue(id, value) {
+            const element = safeGetElement(id);
+            if (element) {
+                element.value = value;
+            }
+        }
+
+        function safeSetChecked(id, checked) {
+            const element = safeGetElement(id);
+            if (element) {
+                element.checked = checked;
+            }
+        }
+
         // Tab switching
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
-                
-                tab.classList.add('active');
-                document.getElementById(tab.dataset.tab).classList.add('active');
+        function initTabs() {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+                    
+                    tab.classList.add('active');
+                    const tabContent = safeGetElement(tab.dataset.tab);
+                    if (tabContent) {
+                        tabContent.classList.add('active');
+                    }
+                });
             });
-        });
+        }
 
         // Industry preset selection
-        document.querySelectorAll('.industry-card').forEach(card => {
-            card.addEventListener('click', () => {
-                const preset = industryPresets[card.dataset.preset];
-                if (preset) {
-                    Object.assign(config, preset);
-                    updateFormValues();
-                    updatePreview();
-                    generateCode();
-                }
+        function initIndustryPresets() {
+            document.querySelectorAll('.industry-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const preset = industryPresets[card.dataset.preset];
+                    if (preset) {
+                        Object.assign(config, preset);
+                        updateFormValues();
+                        updatePreview();
+                        generateCode();
+                    }
+                });
             });
-        });
+        }
 
         // Theme selection
-        document.querySelectorAll('.theme-card').forEach(card => {
-            card.addEventListener('click', () => {
-                document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active'));
-                card.classList.add('active');
-                config.theme = card.dataset.theme;
-                updatePreview();
-                generateCode();
+        function initThemes() {
+            document.querySelectorAll('.theme-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active'));
+                    card.classList.add('active');
+                    config.theme = card.dataset.theme;
+                    updatePreview();
+                    generateCode();
+                });
             });
-        });
+        }
 
         // Emoji selection
-        document.querySelectorAll('.emoji-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('selected'));
-                btn.classList.add('selected');
-                config.triggerIcon = btn.dataset.emoji;
-                document.getElementById('previewIcon').textContent = config.triggerIcon;
-                generateCode();
+        function initEmojis() {
+            document.querySelectorAll('.emoji-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    config.triggerIcon = btn.dataset.emoji;
+                    const previewIcon = safeGetElement('previewIcon');
+                    if (previewIcon) {
+                        previewIcon.textContent = config.triggerIcon;
+                    }
+                    generateCode();
+                });
             });
-        });
+        }
 
         // Form input handlers
         function setupInputHandlers() {
@@ -771,7 +795,7 @@
             };
 
             Object.entries(inputs).forEach(([elementId, configKey]) => {
-                const element = document.getElementById(elementId);
+                const element = safeGetElement(elementId);
                 if (element) {
                     element.addEventListener('input', () => {
                         config[configKey] = element.type === 'number' ? parseInt(element.value, 10) : element.value;
@@ -781,8 +805,8 @@
                 }
             });
 
-            // Checkbox handlers with null checks
-            const autoShowEl = document.getElementById('autoShow');
+            // Checkbox handlers
+            const autoShowEl = safeGetElement('autoShow');
             if (autoShowEl) {
                 autoShowEl.addEventListener('change', (e) => {
                     config.autoShow = e.target.checked;
@@ -790,7 +814,7 @@
                 });
             }
 
-            const showTeaserEl = document.getElementById('showTeaser');
+            const showTeaserEl = safeGetElement('showTeaser');
             if (showTeaserEl) {
                 showTeaserEl.addEventListener('change', (e) => {
                     config.showTeaser = e.target.checked;
@@ -798,7 +822,7 @@
                 });
             }
 
-            const blurEffectEl = document.getElementById('blurEffect');
+            const blurEffectEl = safeGetElement('blurEffect');
             if (blurEffectEl) {
                 blurEffectEl.addEventListener('change', (e) => {
                     config.blurEffect = e.target.checked;
@@ -809,41 +833,26 @@
 
         // Update form values from config
         function updateFormValues() {
-            // Helper function to safely set element values
-            function setElementValue(id, value) {
-                const element = document.getElementById(id);
-                if (element) {
-                    element.value = value;
-                }
-            }
-
-            function setElementChecked(id, checked) {
-                const element = document.getElementById(id);
-                if (element) {
-                    element.checked = checked;
-                }
-            }
-
-            setElementValue('siteId', config.siteId);
-            setElementValue('welcomeMessage', config.welcomeMessage);
-            setElementValue('teaserMessage', config.teaserMessage);
-            setElementValue('triggerText', config.triggerText);
-            setElementValue('headerTitle', config.headerTitle);
-            setElementValue('primaryColor', config.primaryColor);
-            setElementValue('accentColor', config.accentColor);
-            setElementValue('backgroundColor', config.backgroundColor);
-            setElementValue('position', config.position);
-            setElementValue('width', config.width);
-            setElementValue('height', config.height);
-            setElementValue('animation', config.animation);
-            setElementValue('autoShowDelay', config.autoShowDelay);
-            setElementValue('apiEndpoint', config.apiEndpoint);
-            setElementValue('placeholder', config.placeholder);
-            setElementValue('borderRadius', config.borderRadius);
+            safeSetValue('siteId', config.siteId);
+            safeSetValue('welcomeMessage', config.welcomeMessage);
+            safeSetValue('teaserMessage', config.teaserMessage);
+            safeSetValue('triggerText', config.triggerText);
+            safeSetValue('headerTitle', config.headerTitle);
+            safeSetValue('primaryColor', config.primaryColor);
+            safeSetValue('accentColor', config.accentColor);
+            safeSetValue('backgroundColor', config.backgroundColor);
+            safeSetValue('position', config.position);
+            safeSetValue('width', config.width);
+            safeSetValue('height', config.height);
+            safeSetValue('animation', config.animation);
+            safeSetValue('autoShowDelay', config.autoShowDelay);
+            safeSetValue('apiEndpoint', config.apiEndpoint);
+            safeSetValue('placeholder', config.placeholder);
+            safeSetValue('borderRadius', config.borderRadius);
             
-            setElementChecked('autoShow', config.autoShow);
-            setElementChecked('showTeaser', config.showTeaser);
-            setElementChecked('blurEffect', config.blurEffect);
+            safeSetChecked('autoShow', config.autoShow);
+            safeSetChecked('showTeaser', config.showTeaser);
+            safeSetChecked('blurEffect', config.blurEffect);
 
             // Update theme selection
             document.querySelectorAll('.theme-card').forEach(card => {
@@ -858,13 +867,12 @@
 
         // Update preview
         function updatePreview() {
-            const bubble = document.getElementById('previewBubble');
-            const icon = document.getElementById('previewIcon');
-            const text = document.getElementById('previewText');
-            const widget = document.getElementById('widgetPreview');
+            const bubble = safeGetElement('previewBubble');
+            const icon = safeGetElement('previewIcon');
+            const text = safeGetElement('previewText');
+            const widget = safeGetElement('widgetPreview');
 
             if (!bubble || !icon || !text || !widget) {
-                console.warn('Preview elements not found');
                 return;
             }
 
@@ -897,7 +905,7 @@
             // Update colors
             bubble.style.background = `linear-gradient(to right, ${config.primaryColor}, ${config.accentColor})`;
             
-            // Safely update border radius
+            // Update border radius safely
             try {
                 bubble.style.borderRadius = config.borderRadius || '22px';
             } catch (e) {
@@ -940,12 +948,15 @@
             
             code += `        defer></script>`;
             
-            document.getElementById('generatedCode').textContent = code;
+            const codeElement = safeGetElement('generatedCode');
+            if (codeElement) {
+                codeElement.textContent = code;
+            }
         }
 
         // Copy code to clipboard
         function copyCode() {
-            const codeElement = document.getElementById('generatedCode');
+            const codeElement = safeGetElement('generatedCode');
             if (!codeElement) {
                 console.error('Code element not found');
                 return;
@@ -1000,9 +1011,13 @@
             }
         }
 
-        // Initialize with error handling
+        // Initialize all components
         function init() {
             try {
+                initTabs();
+                initIndustryPresets();
+                initThemes();
+                initEmojis();
                 setupInputHandlers();
                 updateFormValues();
                 updatePreview();
@@ -1013,7 +1028,7 @@
             }
         }
 
-        // Start the app with error handling
+        // Start the app
         document.addEventListener('DOMContentLoaded', () => {
             try {
                 init();
