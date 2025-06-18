@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yuno Widget Customizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 20px;
+            height: calc(100vh - 40px);
+        }
+
+        .sidebar {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .preview-area {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .section {
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 6px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .color-input {
+            width: 100%;
+            height: 40px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .preset-themes {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .theme-card {
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .theme-card:hover {
+            border-color: #3b82f6;
+        }
+
+        .theme-card.active {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+
+        .theme-preview {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin: 0 auto 4px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #3b82f6;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        .preview-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 12px;
+            background: #f8fafc;
+            position: relative;
+        }
+
+        .device-frame {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 600px;
+            background: #1f2937;
+            border-radius: 24px;
+            padding: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .device-screen {
+            width: 100%;
+            height: 100%;
+            background: white;
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .code-output {
+            background: #1f2937;
+            color: #e5e7eb;
+            padding: 20px;
+            border-radius: 12px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 12px;
+            line-height: 1.5;
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+
+        .copy-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            margin-top: 12px;
+            transition: background 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: #2563eb;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #e5e7eb;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            font-weight: 500;
+            color: #6b7280;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+        }
+
+        .emoji-btn {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .emoji-btn:hover {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+
+        .emoji-btn.selected {
+            border-color: #3b82f6;
+            background: #3b82f6;
+            color: white;
+        }
+
+        /* Widget Preview Styles */
+        .widget-preview {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            z-index: 1000;
+        }
+
+        .widget-bubble {
+            display: inline-flex;
+            align-items: center;
+            color: white;
+            padding: 0 18px;
+            height: 44px;
+            border-radius: 22px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            gap: 10px;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .widget-bubble:hover {
+            transform: translateY(-3px);
+        }
+
+        .industry-presets {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .industry-card {
+            padding: 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .industry-card:hover {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+
+        .industry-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .industry-name {
+            font-size: 12px;
+            font-weight: 500;
+            color: #374151;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar Configuration -->
+        <div class="sidebar">
+            <h1 style="font-size: 24px; font-weight: 700; color: #1f2937; margin-bottom: 24px;">
+                🎨 Widget Customizer
+            </h1>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <div class="tab active" data-tab="basic">Basic</div>
+                <div class="tab" data-tab="design">Design</div>
+                <div class="tab" data-tab="advanced">Advanced</div>
+            </div>
+
+            <!-- Basic Tab -->
+            <div class="tab-content active" id="basic">
+                <!-- Industry Presets -->
+                <div class="section">
+                    <div class="section-title">🏢 Quick Industry Setup</div>
+                    <div class="industry-presets">
+                        <div class="industry-card" data-preset="ecommerce">
+                            <div class="industry-icon">🛒</div>
+                            <div class="industry-name">E-commerce</div>
+                        </div>
+                        <div class="industry-card" data-preset="saas">
+                            <div class="industry-icon">💻</div>
+                            <div class="industry-name">SaaS</div>
+                        </div>
+                        <div class="industry-card" data-preset="healthcare">
+                            <div class="industry-icon">🏥</div>
+                            <div class="industry-name">Healthcare</div>
+                        </div>
+                        <div class="industry-card" data-preset="education">
+                            <div class="industry-icon">📚</div>
+                            <div class="industry-name">Education</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Site Configuration -->
+                <div class="section">
+                    <div class="section-title">⚙️ Basic Settings</div>
+                    <div class="form-group">
+                        <label class="form-label">Site ID</label>
+                        <input type="text" class="form-input" id="siteId" value="your_site_123" placeholder="Enter your site ID">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Theme</label>
+                        <div class="preset-themes">
+                            <div class="theme-card active" data-theme="dark">
+                                <div class="theme-preview" style="background: linear-gradient(to right, #1f2937, #111827);"></div>
+                                <div>Dark</div>
+                            </div>
+                            <div class="theme-card" data-theme="light">
+                                <div class="theme-preview" style="background: linear-gradient(to right, #ffffff, #f8fafc);"></div>
+                                <div>Light</div>
+                            </div>
+                            <div class="theme-card" data-theme="blue">
+                                <div class="theme-preview" style="background: linear-gradient(to right, #3b82f6, #1d4ed8);"></div>
+                                <div>Blue</div>
+                            </div>
+                            <div class="theme-card" data-theme="green">
+                                <div class="theme-preview" style="background: linear-gradient(to right, #10b981, #059669);"></div>
+                                <div>Green</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Messages -->
+                <div class="section">
+                    <div class="section-title">💬 Messages</div>
+                    <div class="form-group">
+                        <label class="form-label">Welcome Message</label>
+                        <input type="text" class="form-input" id="welcomeMessage" value="Hi! I'm Yuno—how can I help you today?" placeholder="First message from bot">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Teaser Message</label>
+                        <input type="text" class="form-input" id="teaserMessage" value="Let me know if you need help" placeholder="Preview message">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Button Text</label>
+                        <input type="text" class="form-input" id="triggerText" value="Ask Yuno" placeholder="Trigger button text">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Header Title</label>
+                        <input type="text" class="form-input" id="headerTitle" value="Chat with Yuno" placeholder="Chat window title">
+                    </div>
+                </div>
+
+                <!-- Icon Selection -->
+                <div class="section">
+                    <div class="section-title">🎯 Trigger Icon</div>
+                    <div class="emoji-grid">
+                        <div class="emoji-btn selected" data-emoji="💬">💬</div>
+                        <div class="emoji-btn" data-emoji="🤖">🤖</div>
+                        <div class="emoji-btn" data-emoji="💡">💡</div>
+                        <div class="emoji-btn" data-emoji="🛒">🛒</div>
+                        <div class="emoji-btn" data-emoji="🏥">🏥</div>
+                        <div class="emoji-btn" data-emoji="📚">📚</div>
+                        <div class="emoji-btn" data-emoji="🔧">🔧</div>
+                        <div class="emoji-btn" data-emoji="❓">❓</div>
+                        <div class="emoji-btn" data-emoji="💎">💎</div>
+                        <div class="emoji-btn" data-emoji="🎮">🎮</div>
+                        <div class="emoji-btn" data-emoji="🏠">🏠</div>
+                        <div class="emoji-btn" data-emoji="✨">✨</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Design Tab -->
+            <div class="tab-content" id="design">
+                <!-- Colors -->
+                <div class="section">
+                    <div class="section-title">🎨 Colors</div>
+                    <div class="form-group">
+                        <label class="form-label">Primary Color</label>
+                        <input type="color" class="color-input" id="primaryColor" value="#FF6B35">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Accent Color</label>
+                        <input type="color" class="color-input" id="accentColor" value="#FF8C42">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Background Color</label>
+                        <input type="color" class="color-input" id="backgroundColor" value="#000000">
+                    </div>
+                </div>
+
+                <!-- Position & Size -->
+                <div class="section">
+                    <div class="section-title">📐 Position & Size</div>
+                    <div class="form-group">
+                        <label class="form-label">Position</label>
+                        <select class="form-select" id="position">
+                            <option value="bottom-right">Bottom Right</option>
+                            <option value="bottom-left">Bottom Left</option>
+                            <option value="top-right">Top Right</option>
+                            <option value="top-left">Top Left</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Width</label>
+                        <input type="text" class="form-input" id="width" value="340px" placeholder="e.g., 340px">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Height</label>
+                        <input type="text" class="form-input" id="height" value="450px" placeholder="e.g., 450px">
+                    </div>
+                </div>
+
+                <!-- Animation -->
+                <div class="section">
+                    <div class="section-title">🎭 Animation</div>
+                    <div class="form-group">
+                        <label class="form-label">Animation Style</label>
+                        <select class="form-select" id="animation">
+                            <option value="slide">Slide</option>
+                            <option value="fade">Fade</option>
+                            <option value="scale">Scale</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advanced Tab -->
+            <div class="tab-content" id="advanced">
+                <!-- Behavior -->
+                <div class="section">
+                    <div class="section-title">⚡ Behavior</div>
+                    <div class="form-group">
+                        <label class="form-label">
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                Auto Show Teaser
+                                <label class="switch">
+                                    <input type="checkbox" id="autoShow" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Auto Show Delay (ms)</label>
+                        <input type="number" class="form-input" id="autoShowDelay" value="1000" min="0" max="10000" step="500">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                Show Teaser
+                                <label class="switch">
+                                    <input type="checkbox" id="showTeaser" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                Blur Effect
+                                <label class="switch">
+                                    <input type="checkbox" id="blurEffect" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- API Configuration -->
+                <div class="section">
+                    <div class="section-title">🔌 API Settings</div>
+                    <div class="form-group">
+                        <label class="form-label">API Endpoint</label>
+                        <input type="text" class="form-input" id="apiEndpoint" value="https://luckylabs.pythonanywhere.com/ask" placeholder="Your chat API endpoint">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Input Placeholder</label>
+                        <input type="text" class="form-input" id="placeholder" value="Type your message…" placeholder="Input field placeholder">
+                    </div>
+                </div>
+
+                <!-- Visual Settings -->
+                <div class="section">
+                    <div class="section-title">🎪 Visual Settings</div>
+                    <div class="form-group">
+                        <label class="form-label">Border Radius</label>
+                        <input type="text" class="form-input" id="borderRadius" value="16px" placeholder="e.g., 16px">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Generated Code -->
+            <div class="section">
+                <div class="section-title">📋 Generated Code</div>
+                <div class="code-output" id="generatedCode"></div>
+                <button class="copy-btn" onclick="copyCode()">📋 Copy Code</button>
+            </div>
+        </div>
+
+        <!-- Preview Area -->
+        <div class="preview-area">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <h2 style="color: #1f2937; margin-bottom: 8px;">Live Preview</h2>
+                <p style="color: #6b7280;">See how your widget will look on your website</p>
+            </div>
+            
+            <div class="device-frame">
+                <div class="device-screen" id="previewScreen">
+                    <!-- Preview background -->
+                    <div style="position: absolute; inset: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); opacity: 0.1;"></div>
+                    <div style="position: absolute; top: 20px; left: 20px; right: 20px;">
+                        <div style="height: 60px; background: white; border-radius: 8px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"></div>
+                        <div style="height: 40px; background: white; border-radius: 8px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"></div>
+                        <div style="height: 100px; background: white; border-radius: 8px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"></div>
+                        <div style="height: 80px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"></div>
+                    </div>
+                    
+                    <!-- Widget Preview -->
+                    <div class="widget-preview" id="widgetPreview">
+                        <div class="widget-bubble" id="previewBubble">
+                            <span id="previewIcon">💬</span>
+                            <span id="previewText">Ask Yuno</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration object
+        let config = {
+            siteId: 'your_site_123',
+            theme: 'dark',
+            primaryColor: '#FF6B35',
+            accentColor: '#FF8C42',
+            backgroundColor: '#000000',
+            welcomeMessage: "Hi! I'm Yuno—how can I help you today?",
+            teaserMessage: "Let me know if you need help",
+            triggerText: "Ask Yuno",
+            triggerIcon: "💬",
+            headerTitle: "Chat with Yuno",
+            position: "bottom-right",
+            width: "340px",
+            height: "450px",
+            animation: "slide",
+            autoShow: true,
+            autoShowDelay: 1000,
+            showTeaser: true,
+            blurEffect: true,
+            apiEndpoint: "https://luckylabs.pythonanywhere.com/ask",
+            placeholder: "Type your message…",
+            borderRadius: "16px"
+        };
+
+        // Industry presets
+        const industryPresets = {
+            ecommerce: {
+                theme: 'light',
+                primaryColor: '#3B82F6',
+                welcomeMessage: 'Hi! Looking for help with your order or products?',
+                teaserMessage: 'Need shopping help?',
+                triggerText: 'Shop Help',
+                triggerIcon: '🛒',
+                headerTitle: 'Customer Support'
+            },
+            saas: {
+                theme: 'blue',
+                primaryColor: '#6366F1',
+                welcomeMessage: 'Need help getting started? I\'m here to assist!',
+                teaserMessage: 'Questions about features?',
+                triggerText: 'Get Support',
+                triggerIcon: '💻',
+                headerTitle: 'Product Help'
+            },
+            healthcare: {
+                theme: 'light',
+                primaryColor: '#10B981',
+                welcomeMessage: 'Hi! I can help with appointments, services, and questions.',
+                teaserMessage: 'Need medical assistance?',
+                triggerText: 'Ask Nurse',
+                triggerIcon: '🏥',
+                headerTitle: 'Medical Assistant'
+            },
+            education: {
+                theme: 'blue',
+                primaryColor: '#8B5CF6',
+                welcomeMessage: 'Need help with courses or have learning questions?',
+                teaserMessage: 'Study questions? Ask me!',
+                triggerText: 'Get Help',
+                triggerIcon: '📚',
+                headerTitle: 'Learning Assistant'
+            }
+        };
+
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+                
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+            });
+        });
+
+        // Industry preset selection
+        document.querySelectorAll('.industry-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const preset = industryPresets[card.dataset.preset];
+                if (preset) {
+                    Object.assign(config, preset);
+                    updateFormValues();
+                    updatePreview();
+                    generateCode();
+                }
+            });
+        });
+
+        // Theme selection
+        document.querySelectorAll('.theme-card').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+                config.theme = card.dataset.theme;
+                updatePreview();
+                generateCode();
+            });
+        });
+
+        // Emoji selection
+        document.querySelectorAll('.emoji-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                config.triggerIcon = btn.dataset.emoji;
+                document.getElementById('previewIcon').textContent = config.triggerIcon;
+                generateCode();
+            });
+        });
+
+        // Form input handlers
+        function setupInputHandlers() {
+            const inputs = {
+                'siteId': 'siteId',
+                'welcomeMessage': 'welcomeMessage',
+                'teaserMessage': 'teaserMessage',
+                'triggerText': 'triggerText',
+                'headerTitle': 'headerTitle',
+                'primaryColor': 'primaryColor',
+                'accentColor': 'accentColor',
+                'backgroundColor': 'backgroundColor',
+                'position': 'position',
+                'width': 'width',
+                'height': 'height',
+                'animation': 'animation',
+                'autoShowDelay': 'autoShowDelay',
+                'apiEndpoint': 'apiEndpoint',
+                'placeholder': 'placeholder',
+                'borderRadius': 'borderRadius'
+            };
+
+            Object.entries(inputs).forEach(([elementId, configKey]) => {
+                const element = document.getElementById(elementId);
+                if (element) {
+                    element.addEventListener('input', () => {
+                        config[configKey] = element.type === 'number' ? parseInt(element.value, 10) : element.value;
+                        updatePreview();
+                        generateCode();
+                    });
+                }
+            });
+
+            // Checkbox handlers with null checks
+            const autoShowEl = document.getElementById('autoShow');
+            if (autoShowEl) {
+                autoShowEl.addEventListener('change', (e) => {
+                    config.autoShow = e.target.checked;
+                    generateCode();
+                });
+            }
+
+            const showTeaserEl = document.getElementById('showTeaser');
+            if (showTeaserEl) {
+                showTeaserEl.addEventListener('change', (e) => {
+                    config.showTeaser = e.target.checked;
+                    generateCode();
+                });
+            }
+
+            const blurEffectEl = document.getElementById('blurEffect');
+            if (blurEffectEl) {
+                blurEffectEl.addEventListener('change', (e) => {
+                    config.blurEffect = e.target.checked;
+                    generateCode();
+                });
+            }
+        }
+
+        // Update form values from config
+        function updateFormValues() {
+            // Helper function to safely set element values
+            function setElementValue(id, value) {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.value = value;
+                }
+            }
+
+            function setElementChecked(id, checked) {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.checked = checked;
+                }
+            }
+
+            setElementValue('siteId', config.siteId);
+            setElementValue('welcomeMessage', config.welcomeMessage);
+            setElementValue('teaserMessage', config.teaserMessage);
+            setElementValue('triggerText', config.triggerText);
+            setElementValue('headerTitle', config.headerTitle);
+            setElementValue('primaryColor', config.primaryColor);
+            setElementValue('accentColor', config.accentColor);
+            setElementValue('backgroundColor', config.backgroundColor);
+            setElementValue('position', config.position);
+            setElementValue('width', config.width);
+            setElementValue('height', config.height);
+            setElementValue('animation', config.animation);
+            setElementValue('autoShowDelay', config.autoShowDelay);
+            setElementValue('apiEndpoint', config.apiEndpoint);
+            setElementValue('placeholder', config.placeholder);
+            setElementValue('borderRadius', config.borderRadius);
+            
+            setElementChecked('autoShow', config.autoShow);
+            setElementChecked('showTeaser', config.showTeaser);
+            setElementChecked('blurEffect', config.blurEffect);
+
+            // Update theme selection
+            document.querySelectorAll('.theme-card').forEach(card => {
+                card.classList.toggle('active', card.dataset.theme === config.theme);
+            });
+
+            // Update emoji selection
+            document.querySelectorAll('.emoji-btn').forEach(btn => {
+                btn.classList.toggle('selected', btn.dataset.emoji === config.triggerIcon);
+            });
+        }
+
+        // Update preview
+        function updatePreview() {
+            const bubble = document.getElementById('previewBubble');
+            const icon = document.getElementById('previewIcon');
+            const text = document.getElementById('previewText');
+            const widget = document.getElementById('widgetPreview');
+
+            if (!bubble || !icon || !text || !widget) {
+                console.warn('Preview elements not found');
+                return;
+            }
+
+            // Update content
+            icon.textContent = config.triggerIcon;
+            text.textContent = config.triggerText;
+
+            // Update position
+            const [vertical, horizontal] = config.position.split('-');
+            
+            // Reset all position styles
+            widget.style.top = 'auto';
+            widget.style.bottom = 'auto';
+            widget.style.left = 'auto';
+            widget.style.right = 'auto';
+            
+            // Apply new position
+            if (vertical === 'top') {
+                widget.style.top = '30px';
+            } else {
+                widget.style.bottom = '30px';
+            }
+            
+            if (horizontal === 'left') {
+                widget.style.left = '30px';
+            } else {
+                widget.style.right = '30px';
+            }
+
+            // Update colors
+            bubble.style.background = `linear-gradient(to right, ${config.primaryColor}, ${config.accentColor})`;
+            
+            // Safely update border radius
+            try {
+                bubble.style.borderRadius = config.borderRadius || '22px';
+            } catch (e) {
+                bubble.style.borderRadius = '22px';
+            }
+
+            // Update theme-based styles
+            const shadowOpacity = config.theme === 'light' ? '33' : '66';
+            bubble.style.boxShadow = `0 6px 20px ${config.primaryColor}${shadowOpacity}`;
+        }
+
+        // Generate code
+        function generateCode() {
+            let code = `<script src="https://cdn.helloyuno.com/widget.js"\n`;
+            
+            // Required parameters
+            code += `        site_id="${config.siteId}"\n`;
+            
+            // Optional parameters (only include if different from defaults)
+            if (config.theme !== 'dark') code += `        theme="${config.theme}"\n`;
+            if (config.primaryColor !== '#FF6B35') code += `        primary_color="${config.primaryColor}"\n`;
+            if (config.accentColor !== '#FF8C42') code += `        accent_color="${config.accentColor}"\n`;
+            if (config.backgroundColor !== '#000000') code += `        background_color="${config.backgroundColor}"\n`;
+            if (config.welcomeMessage !== "Hi! I'm Yuno—how can I help you today?") code += `        welcome_message="${config.welcomeMessage}"\n`;
+            if (config.teaserMessage !== "Let me know if you need help") code += `        teaser_message="${config.teaserMessage}"\n`;
+            if (config.triggerText !== "Ask Yuno") code += `        trigger_text="${config.triggerText}"\n`;
+            if (config.triggerIcon !== "💬") code += `        trigger_icon="${config.triggerIcon}"\n`;
+            if (config.headerTitle !== "Chat with Yuno") code += `        header_title="${config.headerTitle}"\n`;
+            if (config.position !== "bottom-right") code += `        position="${config.position}"\n`;
+            if (config.width !== "340px") code += `        width="${config.width}"\n`;
+            if (config.height !== "450px") code += `        height="${config.height}"\n`;
+            if (config.animation !== "slide") code += `        animation="${config.animation}"\n`;
+            if (!config.autoShow) code += `        auto_show="false"\n`;
+            if (config.autoShowDelay !== 1000) code += `        auto_show_delay="${config.autoShowDelay}"\n`;
+            if (!config.showTeaser) code += `        show_teaser="false"\n`;
+            if (!config.blurEffect) code += `        blur_effect="false"\n`;
+            if (config.apiEndpoint !== "https://luckylabs.pythonanywhere.com/ask") code += `        api_endpoint="${config.apiEndpoint}"\n`;
+            if (config.placeholder !== "Type your message…") code += `        placeholder="${config.placeholder}"\n`;
+            if (config.borderRadius !== "16px") code += `        border_radius="${config.borderRadius}"\n`;
+            
+            code += `        defer></script>`;
+            
+            document.getElementById('generatedCode').textContent = code;
+        }
+
+        // Copy code to clipboard
+        function copyCode() {
+            const codeElement = document.getElementById('generatedCode');
+            if (!codeElement) {
+                console.error('Code element not found');
+                return;
+            }
+
+            const code = codeElement.textContent;
+            
+            // Modern clipboard API with fallback
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(() => {
+                    showCopySuccess();
+                }).catch(() => {
+                    fallbackCopyToClipboard(code);
+                });
+            } else {
+                fallbackCopyToClipboard(code);
+            }
+        }
+
+        // Fallback copy method
+        function fallbackCopyToClipboard(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.opacity = '0';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                showCopySuccess();
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+                alert('Failed to copy code. Please copy manually.');
+            }
+            
+            document.body.removeChild(textArea);
+        }
+
+        // Show copy success feedback
+        function showCopySuccess() {
+            const btn = document.querySelector('.copy-btn');
+            if (btn) {
+                const originalText = btn.textContent;
+                btn.textContent = '✅ Copied!';
+                btn.style.background = '#10B981';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '#3b82f6';
+                }, 2000);
+            }
+        }
+
+        // Initialize with error handling
+        function init() {
+            try {
+                setupInputHandlers();
+                updateFormValues();
+                updatePreview();
+                generateCode();
+                console.log('Widget customizer initialized successfully');
+            } catch (error) {
+                console.error('Error initializing widget customizer:', error);
+            }
+        }
+
+        // Start the app with error handling
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                init();
+            } catch (error) {
+                console.error('Failed to start widget customizer:', error);
+            }
+        });
+    </script>
+</body>
+</html>
