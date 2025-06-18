@@ -2,7 +2,7 @@
 'use strict';
 
 (() => {
-  const SCRIPT_NAME = 'widget.js';
+  const SCRIPT_NAME = 'yuno.js';
   const allScripts = Array.from(document.getElementsByTagName('script'));
   const thisScript = allScripts.find(s => s.src && s.src.includes(SCRIPT_NAME));
   
